@@ -1,6 +1,8 @@
 #to extract faces from picture or frame of a video
 #some imports are done here we can avoid them in main.py
-
+from PIL import Image
+from numpy import asarray
+from mtcnn.mtcnn import MTCNN
 #cut and pasted imports altering logic****
 
 #to generalize each pic or frame we try returning the list containing multiple faces
@@ -15,7 +17,7 @@ def extract_faces(path, scale_size=(160,160)): #scale_size is kind of required t
     image= image.convert('RGB')
 
     #convert to array
-    img_array= asarray(iamge)
+    img_array= asarray(image)
 
     #creating detector
     detector= MTCNN()
@@ -26,6 +28,7 @@ def extract_faces(path, scale_size=(160,160)): #scale_size is kind of required t
     #trying to handle multiple faces
     i=0
     faces= list()
+    faces.clear()
     for face in results:
         x1, y1, width, height= results[i]['box']
         x2, y2, = x1+width, y1+height
