@@ -9,7 +9,8 @@ from mtcnn.mtcnn import MTCNN
 #arrays for each face in a pic, on the input side of picture i would recommend
 #take the single face out from this list
 
-def extract_faces(path, scale_size=(160,160)): #scale_size is kind of required to get the best output
+def extract_faces(path, scale_size=(160,160)):
+    #scale_size is kind of required to get the best output
     #load the image/ frame
     image= Image.open(path)
 
@@ -28,7 +29,7 @@ def extract_faces(path, scale_size=(160,160)): #scale_size is kind of required t
     #trying to handle multiple faces
     i=0
     faces= list()
-    faces.clear()
+#    faces.clear()
     for face in results:
         x1, y1, width, height= results[i]['box']
         x2, y2, = x1+width, y1+height
