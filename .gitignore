@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#Adding vild Cards for video and pictures
+*.mv4
+*.mp4
+*.webm
+*.jpg
