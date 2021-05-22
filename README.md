@@ -1,5 +1,4 @@
 # InVidet
-Assalam u Alaikum! 
 A little Introduction first, my name is Farzan Khan as it is already you may have figured out looking at my username. I am Student of BS Computer Science
 at Unviversity of Lahore.
 Ok InVidet or In Vid Detector is our FYP. Our group members are
