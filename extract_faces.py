@@ -1,13 +1,19 @@
-#to extract faces from picture or frame of a video
+#History:
+#tested many thing in last couple of days
+#its been hard to to generalise this module for face input
+#and video input, now while testing detection in video file
+#I altered many logics, I am going to change logic in this
+#too putting an end to efforts at generalizing only module
+#for pic and video input, later I may reverse this decison
+
+
+
+
+#to extract single face from picture
 #some imports are done here we can avoid them in main.py
 from PIL import Image
 from numpy import asarray
 from mtcnn.mtcnn import MTCNN
-#cut and pasted imports altering logic****
-
-#to generalize each pic or frame we try returning the list containing multiple faces
-#arrays for each face in a pic, on the input side of picture i would recommend
-#take the single face out from this list
 
 def extract_faces(path, scale_size=(160,160)):
     #scale_size is kind of required to get the best output
@@ -20,18 +26,14 @@ def extract_faces(path, scale_size=(160,160)):
     #convert to array
     img_array= asarray(image)
 
-    #creating detector
+    #loading detector
     detector= MTCNN()
 
     #detecting and storing to results object
     results= detector.detect_faces(img_array)
 
-    #trying to handle multiple faces
-    i=0
-    faces= list()
-#    faces.clear()
     for face in results:
-        x1, y1, width, height= results[i]['box']
+        x1, y1, width, height= results[0]['box']
         x2, y2, = x1+width, y1+height
 
         #extract face
@@ -41,5 +43,4 @@ def extract_faces(path, scale_size=(160,160)):
         image= Image.fromarray(face)
         image= image.resize(scale_size)
         face_array= asarray(image)
-        faces.append(face_array)
-    return faces
+    return face_array
