@@ -9,7 +9,7 @@ from mtcnn_cv2 import MTCNN
 #now removing all dlibs imports and scrap code in comments
 
 #opening video file using cv2
-cap= cv2.VideoCapture("vid_input/video.webm")
+cap= cv2.VideoCapture("vid_input/multi-face.webm")
 
 #loop to monitor enter key to terminate and iterate video frames
 while True:
@@ -30,11 +30,13 @@ while True:
     print(result)
 
     if len(result) > 0:
+        #taking variable i; to iterate in loop; for detecting multiple faces in single frame
+        i=0
         for face in result:
             #if confused read the documentation of cv2.rectangle() it would help a lot
 
             #starting point of the face is stored in x1, y1 as tupple i.e. (x1,y1)
-            x1, y1, width, height= result[0]['box']
+            x1, y1, width, height= result[i]['box']
 
             #storing ending points in x2, y2
             x2, y2, = x1+width, y1+height
@@ -43,6 +45,7 @@ while True:
             #drawing rectangle araound the face
             cv2.rectangle(frame, (x1,y1),
                             (x2,y2), (0, 155, 255),2)
+            i+= 1
 
     # Display the resulting image
     cv2.imshow('Video', frame)
