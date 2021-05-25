@@ -17,7 +17,7 @@ from PIL import Image
 
 
 #opening video file using cv2
-cap= cv2.VideoCapture("vid_input/multi-face.webm")
+cap= cv2.VideoCapture("vid_input/multi-face.mp4")
 
 #loop to monitor enter key to terminate and iterate video frames
 countframes=0
