@@ -15,6 +15,7 @@ from PIL import Image
 from numpy import asarray
 from mtcnn.mtcnn import MTCNN
 
+
 def extract_faces(path, scale_size=(160,160)):
     #scale_size is kind of required to get the best output
     #load the image/ frame
