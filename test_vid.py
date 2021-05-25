@@ -65,7 +65,7 @@ while True:
 
             #creating image from image array to store in directory video_frames
             frame_face = frame_array[y1:y2, x1:x2]
-            frame_face = Image.fromarray(frame_face).convert("RGB") #conveerted RGB
+            frame_face = Image.fromarray(frame_face).convert('RGB') #conveerted RGB
 
             #setting a trackable name
             face_name= f'{countframes}{"-"}{face_num}'
