@@ -50,23 +50,27 @@ while True:
         #to work with deep face
         frame_array = asarray(frame)
 
-        #taking variable i; to iterate in loop; for detecting multiple faces in single frame
+        #taking variable face_num; to iterate in loop; for detecting multiple faces in single frame
         face_num=0
         for face in result:
             #if confused read the documentation of cv2.rectangle() it would help a lot
 
             #starting point of the face is stored in x1, y1 as tupple i.e. (x1,y1)
             x1, y1, width, height= result[face_num]['box']
-
             #storing ending points in x2, y2
             x2, y2, = x1+width, y1+height
 
             #rather than drawing rectangle I would want to save faces
             #appeared in frames to a directory; to work with deepface
+
+            #creating image from image array to store in directory video_frames
             frame_face = frame_array[y1:y2, x1:x2]
-            frame_face = Image.fromarray(frame_face)
+            frame_face = Image.fromarray(frame_face).convert("RGB") #conveerted RGB
+
+            #setting a trackable name
             face_name= f'{countframes}{"-"}{face_num}'
             frame_path= "video_frames/"+ face_name+ ".jpg"
+            #saving single face of frame in directory
             frame_face.save(frame_path)
 
             #cv2.rectangle(start, end, color(RGB), (pixel of drawn line))
@@ -75,13 +79,12 @@ while True:
                             (x2,y2), (0, 155, 255),2)
             face_num+= 1
 
-    # Display the resulting image
+    # Display the resulting frames video
     cv2.imshow('Video', frame)
-#    countframes+= 1
     print(countframes)
 
     # Wait for Enter key to stop
-    if cv2.waitKey(25) == 13:
+    if cv2.waitKey(25) == 13 or frame is None :
         break
 
 
