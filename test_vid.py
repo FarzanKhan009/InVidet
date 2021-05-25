@@ -12,6 +12,7 @@ from mtcnn_cv2 import MTCNN
 cap= cv2.VideoCapture("vid_input/multi-face.webm")
 
 #loop to monitor enter key to terminate and iterate video frames
+#countframes=0
 while True:
     # Grab a single frame of video
     ret, frame = cap.read()
@@ -49,6 +50,8 @@ while True:
 
     # Display the resulting image
     cv2.imshow('Video', frame)
+#    countframes+= 1
+ #   print(countframes)
 
     # Wait for Enter key to stop
     if cv2.waitKey(25) == 13:
