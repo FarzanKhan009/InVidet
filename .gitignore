@@ -130,6 +130,7 @@ dmypy.json
 
 #Adding vild Cards for video and pictures
 *.mv4
+*.m4v
 *.mp4
 *.webm
 *.jpg
