@@ -1,3 +1,4 @@
+
 import cv2
 from mtcnn_cv2 import MTCNN
 from numpy import asarray
@@ -23,8 +24,12 @@ cap= cv2.VideoCapture("vid_input/multi-face.mp4")
 countframes=0
 while True:
     # Grab a single frame of video
-    ret, frame = cap.read()
-    countframes += 1
+    try:
+        ret, frame = cap.read()
+        countframes += 1
+    except:
+        print("End of frames")
+        break
 
     #below if conditional logic is to boost up the speed
     #reducing frames rate 6 fps actual was 30fps
@@ -66,10 +71,11 @@ while True:
             #creating image from image array to store in directory video_frames
             frame_face = frame_array[y1:y2, x1:x2]
             frame_face = Image.fromarray(frame_face).convert('RGB') #conveerted RGB
+            frame_face = frame_face.resize(160,160)
 
             #setting a trackable name
             face_name= f'{countframes}{"-"}{face_num}'
-            frame_path= "video_frames/"+ face_name+ ".jpg"
+            frame_path= "extracted_faces_video_frames/"+ face_name+ ".jpg"
             #saving single face of frame in directory
             frame_face.save(frame_path)
 
@@ -84,7 +90,7 @@ while True:
     print(countframes)
 
     # Wait for Enter key to stop
-    if cv2.waitKey(25) == 13 or frame is None :
+    if cv2.waitKey(25) == 13:
         break
 
 

@@ -18,12 +18,7 @@ import rec_by_deepface as df
 
 
 
-picture_folder= 'pic_input/'
 
-# path
-path = picture_folder + "single-face-pic-input.jpg"
-# get face
-face_picture_input = extract_faces(path)
 
 
 #going to work with deepface

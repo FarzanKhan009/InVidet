@@ -7,15 +7,6 @@
 #for pic and video input, later I may reverse this decison
 
 
-
-
-#to extract single face from picture
-#some imports are done here we can avoid them in main.py
-from PIL import Image
-from numpy import asarray
-from mtcnn.mtcnn import MTCNN
-
-
 def extract_faces(path, scale_size=(160,160)):
     #scale_size is kind of required to get the best output
     #load the image/ frame
@@ -43,5 +34,30 @@ def extract_faces(path, scale_size=(160,160)):
         #resizing for the model
         image= Image.fromarray(face)
         image= image.resize(scale_size)
+
+        #setting face path for picture input, saving it in directory
+        face_folder= "extracted_face_picture/"
+        face_name= "single_face_picture.jpg"
+        path_of_picture_face=face_folder+ face_name
+        #saving
+        image.save(path_of_picture_face)
+
         face_array= asarray(image)
     return face_array
+
+
+
+#to extract single face from picture
+#some imports are done here we can avoid them in main.py
+from PIL import Image
+from numpy import asarray
+from mtcnn.mtcnn import MTCNN
+
+picture_folder= 'pic_input/'
+
+# path for picture input
+path = picture_folder + "single-face-pic-input.jpg"
+# get face
+face_picture_input = extract_faces(path)
+
+
