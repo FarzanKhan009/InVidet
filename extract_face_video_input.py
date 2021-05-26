@@ -2,6 +2,7 @@
 import cv2
 from mtcnn_cv2 import MTCNN
 from numpy import asarray
+import matplotlib.pyplot as plt
 
 from PIL import Image
 
@@ -37,10 +38,9 @@ while True:
         continue
 
 
-    # Convert the image from BGR color (which OpenCV uses) to RGB
+    # Convert the image from BGR color(which OpenCV uses) to RGB
     # RGB is preferred color while detection faces
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    #another way of converting to RGB=>> rgb_frame = frame[:, :, ::-1]
+    rgb_frame= frame[:,:,::-1]
 
     #loading detector from MTCNN
     detector = MTCNN()
@@ -53,7 +53,7 @@ while True:
 
     if len(result) > 0:
         #to work with deep face
-        frame_array = asarray(frame)
+        frame_array = asarray(rgb_frame)
 
         #taking variable face_num; to iterate in loop; for detecting multiple faces in single frame
         face_num=0
@@ -65,19 +65,18 @@ while True:
             #storing ending points in x2, y2
             x2, y2, = x1+width, y1+height
 
-            #rather than drawing rectangle I would want to save faces
             #appeared in frames to a directory; to work with deepface
-
             #creating image from image array to store in directory video_frames
             frame_face = frame_array[y1:y2, x1:x2]
-            frame_face = Image.fromarray(frame_face).convert('RGB') #conveerted RGB
-            frame_face = frame_face.resize(160,160)
+#            size=(160,160)
+#            frame_face = frame_face.resize(size)
 
             #setting a trackable name
             face_name= f'{countframes}{"-"}{face_num}'
             frame_path= "extracted_faces_video_frames/"+ face_name+ ".jpg"
             #saving single face of frame in directory
-            frame_face.save(frame_path)
+            cv2.imwrite(frame_path, frame_face[:,:,::-1])
+
 
             #cv2.rectangle(start, end, color(RGB), (pixel of drawn line))
             #drawing rectangle araound the face
