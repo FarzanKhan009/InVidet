@@ -11,37 +11,37 @@ import cv2
 
 #Imports to work with deep face
 import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
 
 import rec_by_deepface as df
 
 
 
 
-vf, fn, of, dff, did, af,dlb=1, 1,1,1,1,1,1
 picture= "extracted_face_picture/single_face_picture.jpg"
-picture = cv2.imread(picture)[:, :, ::-1]
+picture= Image.open(picture)
+#picture = cv2.imread(picture)[:, :, ::-1]
+picture= picture.resize((160,160))
 #going to work with deepface
 i=0
-for files in os.listdir("extracted_faces_video_frames"):
-    frames = cv2.imread("extracted_faces_video_frames/%s" %(files))[:, :, ::-1]
+
+frames_from_npz= "video_faces.npz"
+frames= np.load(frames_from_npz)
+frames= frames["arr_0"]
+frame_num=1
+for frames_arr in frames:
+    frame= Image.fromarray(frames_arr)
+
 
 #    plt.imshow(picture)
 #    plt.show()
 #    break
 
-    try:
-        #vf= df.verify(picture, frames, "VGG-Face", vf, fn, of, dff, did, af,dlb)
-        fn= df.verify(picture,frames, "Facenet", vf, fn, of, dff, did, af,dlb)
-        #of= df.verify(picture, frames, "OpenFace", vf, fn, of, dff, did, af,dlb)
-        dff= df.verify(picture, frames, "DeepFace", vf, fn, of, dff, did, af,dlb)
-        did= df.verify(picture, frames, "DeepID", vf, fn, of, dff, did, af,dlb)
-        af= df.verify(picture, frames, "ArcFace", vf, fn, of, dff, did, af,dlb)
-        dlb= df.verify(picture, frames, "Dlib", vf, fn, of, dff, did, af,dlb)
-        i+= 1
-        print(i, "Above reuslts are for frame", files)
-    except:
-        print("Face might not been detected for file %s" %(i))
-        i+= 1
+    df.verify(picture,frame, "Facenet")
+    print(i, "Above reuslts are for frame", frame_num)
+    frame_num+= 1
+    i+= 1
 
 #below plotting just for initial test purpose
 #print(face_picture_input)
