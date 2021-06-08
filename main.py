@@ -31,14 +31,15 @@ frames= np.load(frames_from_npz)
 frames= frames["arr_0"]
 frame_num=1
 for frames_arr in frames:
-    frame= Image.fromarray(frames_arr)
+    # frame= Image.fromarray(frames_arr)
 
 
 #    plt.imshow(picture)
 #    plt.show()
 #    break
-
-    df.verify(picture,frame, "Facenet")
+#     print(frames_arr)
+#     print(np.array(frame))
+    df.verify(np.array(picture),frames_arr, "Facenet")
     print(i, "Above reuslts are for frame", frame_num)
     frame_num+= 1
     i+= 1
