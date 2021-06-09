@@ -1,11 +1,31 @@
 import glob
 
 import PySimpleGUI as sg
+import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
 
 from extract_face_nparray import extract_face
+from create_npz_file import create_npz_faces
+from plot import plot_from_npz
 
+#getting face np array
+
+def get_face(picture_input):
+    # slicing path string because folder reside in project directory
+    picture_input = picture_input.rsplit("InVidett", 1)
+    picture_input = picture_input[1][1:]
+
+    # calling module extract_face_nparraay to get the face list
+    return extract_face(picture_input)
+
+def get_video_npz(video_input):
+    video_input= video_input.rsplit("InVidett",1)[1][1:]
+    # print(video_input)
+
+    create_npz_faces(video_input)
+
+    return np.load("video_faces.npz")["arr_0"]
 
 
 sg.theme('BluePurple')
@@ -34,19 +54,16 @@ while True:  # Event Loop
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
     if event == '-OK-':
-        picture_input=values["-PICIN-"]
+        # picture_input=values["-PICIN-"]
+        # pic_face= get_face(picture_input)[0]
 
-        #slicing path string because folder reside in project directory
-        picture_input= picture_input.rsplit("InVidett", 1)
-        picture_input= picture_input[1][1:]
+        video_input= values["-VIDIN-"]
+        video_npz_loaded= get_video_npz(video_input)
 
-        #calling module function to get the face list
-        picture_face= extract_face(picture_input)
+        plot_from_npz(video_npz_loaded)
 
-
-
-        # picture_face = Image.fromarray(picture_face[0])
-        # plt.imshow(picture_face)
+        # pic_face = Image.fromarray(pic_face)
+        # plt.imshow(pic_face)
 
         # print(picture_input)
         # Update the "output" text element to be the value of "input" element

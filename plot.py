@@ -4,14 +4,14 @@ from PIL import Image
 
 fig=plt.figure(figsize=(8, 8))
 
-def plot_from_npz():
-    faces_np_name= "video_faces.npz"
-    faces= np.load(faces_np_name)
-    faces= faces["arr_0"]
+def plot_from_npz(loaded_npz):
+
+    # faces= np.load(str(url))
+    # faces= faces["arr_0"]
     i=1
-    print(len(faces))
+    # print(len(faces))
     colrows= 12
-    for face_arr in faces:
+    for face_arr in loaded_npz:
         #print(face)
         face= Image.fromarray(face_arr)
         fig.add_subplot(colrows, colrows, i)
@@ -34,4 +34,5 @@ def testplot1():
     for frames_arr in frames:
         frame = Image.fromarray(frames_arr)
         plt.imshow(frame)
-testplot1()
+# testplot1()
+# plot_from_npz()
