@@ -1,5 +1,5 @@
-# this module is istegrated approah for detection in video for each
-# frame at the same time extracting and comparing so that less burdon
+# this module is integrated approach for detection in video for each
+# frame at the same time extracting and comparing so that less burden
 # on RAM also no need to store them in directory as Images or npz files
 import numpy as np
 from PIL import Image
@@ -56,6 +56,7 @@ def compare_faces(pic_face, vid_url):
 
         # if result get some faces
         if len(result) > 0:
+            outer_no_face=0
             frame_array = np.array(rgb_frame)
             # frame_array = asarray(rgb_frame)
 
@@ -90,14 +91,14 @@ def compare_faces(pic_face, vid_url):
                         print("First Match at frame: ", countframes)
 
                     not_matched=0
-                    print("True for frames: ", first_marked_frame, "to ", countframes)
+                    print("Match is True for frame: ", first_marked_frame, "to ", countframes)
                     break
 
                 else:
                     not_matched += 1
                     if not_matched ==6:
                         last_marked_frame= countframes- 30
-                        print("Last Match at frame: ", countframes)
+                        print("Last Match at frame: ", countframes -30)
 
                 if last_marked_frame >0:
                     tracked_list.append(first_marked_frame)
@@ -109,6 +110,16 @@ def compare_faces(pic_face, vid_url):
 
         else:
             outer_no_face+=1
+            if outer_no_face == 6:
+                if first_marked_frame >0:
+                    last_marked_frame = countframes - 30
+                    tracked_list.append(first_marked_frame)
+                    tracked_list.append(last_marked_frame)
+
+                    match = 0
+                    first_marked_frame = 0
+                    last_marked_frame = 0
+                    print("Last Matched frame: ", countframes-30)
 
 
 
@@ -117,16 +128,7 @@ def compare_faces(pic_face, vid_url):
                 # append in face list
                 # faces_list.append(frame_face)
 
-        if outer_no_face == 60:
-            if first_marked_frame >=0:
-                last_marked_frame = countframes - 60
-                tracked_list.append(first_marked_frame)
-                tracked_list.append(last_marked_frame)
 
-                match=0
-                first_marked_frame=0
-                last_marked_frame=0
-                print("Last Mathed frame: ", countframes)
 
         print("Total frames processed: ", countframes)
         # just for test purpose limiting frames
@@ -138,5 +140,5 @@ def compare_faces(pic_face, vid_url):
 
     # releasing video and destroying windows
     cap.release()
-    return
+    return tracked_list
 
