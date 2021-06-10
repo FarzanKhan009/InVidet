@@ -8,15 +8,16 @@ from matplotlib import pyplot as plt
 from extract_face_nparray import extract_face
 from create_npz_file import create_npz_faces
 from plot import plot_from_npz
+from face_compare import compare_faces
 
 #getting face np array
 
-# def get_face(picture_input):
-#     # slicing path string because folder reside in project directory
-#     picture_input = picture_input.rsplit("InVidett", 1)
-#     picture_input = picture_input[1][1:]
-#     # calling module extract_face_nparraay to get the face list
-#     return extract_face(picture_input)
+def get_face(picture_input):
+    # slicing path string because folder reside in project directory
+    picture_input = picture_input.rsplit("InVidett", 1)
+    picture_input = picture_input[1][1:]
+    # calling module extract_face_nparraay to get the face list
+    return extract_face(picture_input)
 
 # def get_video_npz(video_input):
 #     video_input= video_input.rsplit("InVidett",1)[1][1:]
@@ -58,10 +59,12 @@ while True:  # Event Loop
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
     if event == '-OK-':
-        # picture_input=values["-PICIN-"]
-        # pic_face= get_face(picture_input)[0]
+        picture_input=values["-PICIN-"]
+        pic_face= get_face(picture_input)[0]
 
         video_input= values["-VIDIN-"]
+        compare_faces(pic_face, video_input)
+
         # video_faces_list= get_video_faces_list(video_input)
         # video_faces_list= get_video_npz(video_input)
 
