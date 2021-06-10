@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 
 def verify(img, frame, model):
     results= DeepFace.verify(img, frame, enforce_detection=False, model_name=model)
-    print("result: ", results)
+    # print("result: ", results)
     verification= results['verified']
     if verification is True:
         print(model, "Successfully recognised. SCORE=")
-        return
+        return results['verified']
     return
