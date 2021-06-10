@@ -18,7 +18,10 @@ def compare_faces(pic_face, vid_url):
     countframes = 1
 
     # taking some variables for tracking purpose
-    first_marked_frame, last_marked_frame, middle_frames, bad_mark= 0,0,0,0
+    first_marked_frame, last_marked_frame, middle_frames, not_matched, outer_no_face= 0,0,0,0,0
+    match= 0
+    tracked_list= list()
+
 
     # faces_list = list()
     while True:
@@ -73,11 +76,39 @@ def compare_faces(pic_face, vid_url):
                 frame_face = frame_face.resize((160, 160))
                 # back to array
                 frame_face = asarray(frame_face)
+                face_num += 1
+
 
                 # implementing deepface
-                df.verify(pic_face, frame_face, "Facenet")
-                print(countframes, "Above reuslts are for frame", countframes)
+                recognised= df.verify(pic_face, frame_face, "Facenet")
+                # print("Face number in current frame: ", face_num, "Above reuslts are for frame", countframes)
 
+                if recognised== True:
+                    match+= 1
+                    if match == 1:
+                        first_marked_frame= countframes
+                        print("First Match at frame: ", countframes)
+
+                    not_matched=0
+                    print("True for frames: ", first_marked_frame, "to ", countframes)
+                    break
+
+                else:
+                    not_matched += 1
+                    if not_matched ==6:
+                        last_marked_frame= countframes- 30
+                        print("Last Match at frame: ", countframes)
+
+                if last_marked_frame >0:
+                    tracked_list.append(first_marked_frame)
+                    tracked_list.append(last_marked_frame)
+
+                    match=0
+                    first_marked_frame=0
+                    last_marked_frame=0
+
+        else:
+            outer_no_face+=1
 
 
 
@@ -86,10 +117,21 @@ def compare_faces(pic_face, vid_url):
                 # append in face list
                 # faces_list.append(frame_face)
 
-        print(countframes)
+        if outer_no_face == 60:
+            if first_marked_frame >=0:
+                last_marked_frame = countframes - 60
+                tracked_list.append(first_marked_frame)
+                tracked_list.append(last_marked_frame)
+
+                match=0
+                first_marked_frame=0
+                last_marked_frame=0
+                print("Last Mathed frame: ", countframes)
+
+        print("Total frames processed: ", countframes)
         # just for test purpose limiting frames
-        if countframes >= 130:
-            break
+        # if countframes >= 130:
+        #     break
 
     # saving faces list into npz
     # savez("video_faces.npz", faces_list)
