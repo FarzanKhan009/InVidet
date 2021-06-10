@@ -11,21 +11,25 @@ from plot import plot_from_npz
 
 #getting face np array
 
-def get_face(picture_input):
-    # slicing path string because folder reside in project directory
-    picture_input = picture_input.rsplit("InVidett", 1)
-    picture_input = picture_input[1][1:]
+# def get_face(picture_input):
+#     # slicing path string because folder reside in project directory
+#     picture_input = picture_input.rsplit("InVidett", 1)
+#     picture_input = picture_input[1][1:]
+#     # calling module extract_face_nparraay to get the face list
+#     return extract_face(picture_input)
 
-    # calling module extract_face_nparraay to get the face list
-    return extract_face(picture_input)
+# def get_video_npz(video_input):
+#     video_input= video_input.rsplit("InVidett",1)[1][1:]
+#
+#     # return create_npz_faces(video_input)
+#
+#     # creating npz file
+#     create_npz_faces(video_input)
+#     return np.load("video_faces.npz")["arr_0"]
 
-def get_video_npz(video_input):
-    video_input= video_input.rsplit("InVidett",1)[1][1:]
-    # print(video_input)
-
-    create_npz_faces(video_input)
-
-    return np.load("video_faces.npz")["arr_0"]
+# def get_video_faces_list(video_input):
+#     video_input = video_input.rsplit("InVidett", 1)[1][1:]
+#     return create_npz_faces(video_input)
 
 
 sg.theme('BluePurple')
@@ -46,7 +50,7 @@ layout =[
 
 
 
-window = sg.Window('InVid Detector', layout, size=(1200, 800), finalize= True)
+window = sg.Window('InVid Detector', layout, size=(1200, 800),)
 while True:  # Event Loop
     event, values = window.read()
     # print(event, values["-PICIN-"])
@@ -58,12 +62,11 @@ while True:  # Event Loop
         # pic_face= get_face(picture_input)[0]
 
         video_input= values["-VIDIN-"]
-        video_npz_loaded= get_video_npz(video_input)
+        # video_faces_list= get_video_faces_list(video_input)
+        # video_faces_list= get_video_npz(video_input)
 
-        plot_from_npz(video_npz_loaded)
+        # plot_from_npz(video_faces_list)
 
-        # pic_face = Image.fromarray(pic_face)
-        # plt.imshow(pic_face)
 
         # print(picture_input)
         # Update the "output" text element to be the value of "input" element

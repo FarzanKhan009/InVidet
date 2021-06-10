@@ -2,22 +2,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-fig=plt.figure(figsize=(8, 8))
 
 def plot_from_npz(loaded_npz):
+    fig = plt.figure(figsize=(8, 8))
 
     # faces= np.load(str(url))
     # faces= faces["arr_0"]
+    # faces= np.load("video_faces.npz")["arr_0"]
+    faces= loaded_npz
     i=1
+    # print(loaded_npz)
+    # print(np.load("video_faces.npz")["arr_0"])
     # print(len(faces))
     colrows= 12
-    for face_arr in loaded_npz:
+    for face_arr in faces:
         #print(face)
         face= Image.fromarray(face_arr)
-        fig.add_subplot(colrows, colrows, i)
+        # fig.add_subplot(colrows, colrows, i)
         plt.imshow(face)
         i+= 1
     plt.show()
+    return
 
 def testplot():
     picture = "extracted_face_picture/single_face_picture.jpg"
@@ -35,4 +40,4 @@ def testplot1():
         frame = Image.fromarray(frames_arr)
         plt.imshow(frame)
 # testplot1()
-# plot_from_npz()
+# plot_from_npz("kkk")

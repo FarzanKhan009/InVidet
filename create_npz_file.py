@@ -13,7 +13,10 @@ from numpy import asarray, savez
 import matplotlib.pyplot as plt
 
 
-def create_npz_faces(url="vid_input/video.webm"):
+def create_npz_faces(url=""):
+    #below condition to stop it run automatically when import
+    # if url== "":
+    #     return
     cap = cv2.VideoCapture(url)
     countframes = 0
     faces_list= list()
@@ -82,23 +85,23 @@ def create_npz_faces(url="vid_input/video.webm"):
 
 
     #saving faces list into npz
-    savez("video_faces.npz", faces_list)
+    # savez("video_faces.npz", faces_list)
 
 
     # releasing video and destroying windows
     cap.release()
-    return
+    return faces_list
 
 
-def plot_from_npz():
-    faces_np_name= "video_faces.npz"
-    faces= np.load(faces_np_name)['arr_0']
-    for face_arr in faces:
-        face= Image.fromarray(face_arr)
-        plt.imshow(face)
-    print("outer")
-    plt.show()
+# def plot_from_npz():
+#     faces_np_name= "video_faces.npz"
+#     faces= np.load(faces_np_name)['arr_0']
+#     for face_arr in faces:
+#         face= Image.fromarray(face_arr)
+#         plt.imshow(face)
+#     print("outer")
+#     plt.show()
 
 
-create_npz_faces()
+# create_npz_faces()
 # plot_from_npz()
