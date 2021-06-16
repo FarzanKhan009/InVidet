@@ -60,20 +60,27 @@ while True:  # Event Loop
         break
     if event == '-OK-':
         picture_input=values["-PICIN-"]
-        pic_face= get_face(picture_input)[0]
+        # pic_face= get_face(picture_input)[0]
 
         video_input= values["-VIDIN-"]
-        track_records= compare_faces(pic_face, video_input)
+        track_records= compare_faces(picture_input, video_input)
         if len(track_records) >0:
             for frames in track_records:
                 current_index= track_records.index(frames)
                 if current_index % 2 ==0:
                     last_frame= track_records[current_index+1]
+                    print("\n\nResults")
                     print("Matched was found:")
                     print("From frame number ", frames, " to ", last_frame)
-                    print("That is approximately Face Matched during time ", frames/30, "sec to ", last_frame/30)
+                    print("That is approximately Face Matched during time ", frames/32, "sec to ", last_frame/32)
 
-
+            if len(track_records) % 2 != 0:
+                first_frame = track_records[len(track_records) - 2]
+                last_frame = track_records[len(track_records) - 1]
+                print("\n\nResults")
+                print("Matched was found:")
+                print("From frame number ", frames, " to ", last_frame)
+                print("That is approximately Face Matched during time ", first_frame / 32, "sec to ", last_frame / 32)
         # video_faces_list= get_video_faces_list(video_input)
         # video_faces_list= get_video_npz(video_input)
 
