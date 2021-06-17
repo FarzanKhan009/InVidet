@@ -185,16 +185,16 @@ def compare_faces(pic_url, vid_url):
 
         else:
             outer_no_face += 1
-            if outer_no_face == 6:
+            if outer_no_face == 4:
                 if first_marked_frame > 0:
-                    last_marked_frame = countframes - 30
+                    last_marked_frame = countframes - 20
                     tracked_list.append(first_marked_frame)
                     tracked_list.append(last_marked_frame)
 
                     match = 0
                     first_marked_frame = 0
                     last_marked_frame = 0
-                    print("Last Matched frame: ", countframes - 30)
+                    print("Last Matched frame: ", countframes - 20)
 
                 # append in face list
                 # faces_list.append(frame_face)
@@ -203,6 +203,14 @@ def compare_faces(pic_url, vid_url):
         # just for test purpose limiting frames
         # if countframes >= 130:
         #     break
+
+    # for last tracking duration
+    if first_marked_frame > 0:
+        last_marked_frame = countframes
+        tracked_list.append(first_marked_frame)
+        tracked_list.append(last_marked_frame)
+        print("Last Matched frame: ", countframes)
+
 
     # saving faces list into npz
     # savez("video_faces.npz", faces_list)

@@ -32,7 +32,23 @@ def get_embedding(face):
     return embeddings
 
 
-def compare_faces(pic_url, vid_url):
+def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
+    # setting divisible by using v_fps to fast or slow the process i.e. how much frames to skip
+    divisible=0
+    tolerance=0
+    if v_fps==1:
+        divisible =  fps
+        tolerance = 2
+    if v_fps==2:
+        tolerance = 3
+        divisible = fps/2
+    if v_fps==3:
+        tolerance = 3
+        divisible = fps/3
+    if v_fps==4:
+        tolerance = 3
+        divisible = fps/4
+
     # model = load_model('facenet_keras.h5')      # model for getting embeddings
     # slicing path string because folder reside in project directory
     pic_url = pic_url.rsplit("InVidett", 1)
@@ -56,13 +72,12 @@ def compare_faces(pic_url, vid_url):
     countframes = 1
 
     # taking some variables for tracking purpose
-    first_marked_frame, last_marked_frame, middle_frames, not_matched, outer_no_face = 0, 0, 0, 0, 0
-    match = 0
+    first_marked_frame, last_marked_frame, not_matched, outer_no_face, match= 0, 0, 0, 0, 0
+    # match = 0
     tracked_list = list()
 
     # faces_list = list()
     while True:
-        # Grab a single frame of video
         try:
             ret, frame = cap.read()
             countframes += 1
@@ -73,7 +88,7 @@ def compare_faces(pic_url, vid_url):
 
         # below if conditional logic is to boost up the speed
         # reducing frames rate 6 fps actual was 30fps
-        if countframes % 5 != 0:
+        if countframes % int(divisible) != 0:
             continue
 
         # Convert the image from BGR color(which OpenCV uses) to RGB
@@ -149,7 +164,8 @@ def compare_faces(pic_url, vid_url):
                 frame_face_embeddings = get_embedding(frame_face)
                 # getting distance through cosine
                 distance = cosine(pic_embeddings, frame_face_embeddings)
-                if distance >= 0.5:
+                # used threshold provided by user from GUI module
+                if distance >= threshold:
                     recognised = False
                     print("picture input didn't matched for face number ", face_num, " in the frame ", countframes,
                           " where total faces in current frames are ", len(faces))
@@ -171,9 +187,9 @@ def compare_faces(pic_url, vid_url):
 
                 else:
                     not_matched += 1
-                    if not_matched == 6:
-                        last_marked_frame = countframes - 30
-                        print("Last Match at frame: ", countframes - 30)
+                    if not_matched == tolerance:
+                        last_marked_frame = countframes - (tolerance * divisible)
+                        print("Last Match at frame: ", countframes - (tolerance* divisible))
 
                 if last_marked_frame > 0:
                     tracked_list.append(first_marked_frame)
@@ -185,9 +201,9 @@ def compare_faces(pic_url, vid_url):
 
         else:
             outer_no_face += 1
-            if outer_no_face == 4:
+            if outer_no_face == tolerance:
                 if first_marked_frame > 0:
-                    last_marked_frame = countframes - 20
+                    last_marked_frame = countframes - (tolerance * divisible)
                     tracked_list.append(first_marked_frame)
                     tracked_list.append(last_marked_frame)
 
