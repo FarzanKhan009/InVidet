@@ -22,7 +22,7 @@ from face_compare import compare_faces
 #                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
 #                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
 
-threshold, v_fps=0,0
+threshold, v_fps, fps=0,0,0
 v_out= False
 picture_input, video_input ="", ""
 
@@ -245,11 +245,11 @@ while True:  # Event Loop
             vid_name = vid_url.rsplit("/", 1)
             # print(vid_name, pic_url)
             vid_name = f'{"Video name: "}{vid_name[1]}'
-            fps = "Video frame rate: %s" % fps
+            message_fps = "Video frame rate: %s" % fps
             # print(vid_name, fps, pic_url)
             # window.refresh()
             window["-VNAME"].update(value=str(vid_name))
-            window["-VFPS-"].update(value=str(fps))
+            window["-VFPS-"].update(value=str(message_fps))
             window["-VDUR-"].update(value= f'{"Video duration: "}{duration}{"sec"}')
 
         # window.refresh()
@@ -260,7 +260,8 @@ while True:  # Event Loop
         # print(threshold, type(threshold))
     if event == "-START-":
         if len(picture_input)>0 and len(video_input)>0:
-            track_records= compare_faces(picture_input, video_input)
+            track_records= compare_faces(picture_input, video_input, fps, threshold, v_out, v_fps)
+            # track_records= compare_faces(picture_input, video_input)
             if len(track_records) >0:
                 for frames in track_records:
                     current_index= track_records.index(frames)
@@ -269,7 +270,7 @@ while True:  # Event Loop
                         print("\n\nResults")
                         print("Matched was found:")
                         print("From frame number ", frames, " to ", last_frame)
-                        print("That is approximately Face Matched during time ", frames/30, "sec to ", last_frame/30)
+                        print("That is approximately Face Matched during time ", frames/(fps+2), "sec to ", last_frame/(fps+2))
 
                 if len(track_records) % 2 != 0:
                     first_frame = track_records[len(track_records) - 2]
@@ -277,6 +278,6 @@ while True:  # Event Loop
                     print("\n\nResults")
                     print("Matched was found:")
                     print("From frame number ", frames, " to ", last_frame)
-                    print("That is approximately Face Matched during time ", first_frame / 30, "sec to ", last_frame / 30)
+                    print("That is approximately Face Matched during time ", first_frame / (fps+ 2), "sec to ", last_frame / (fps+2))       # +2 in fps is for bugg fixes
 
 window.close()
