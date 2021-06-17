@@ -22,10 +22,11 @@ from face_compare import compare_faces
 #                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
 #                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
 
-threshold, v_fps, fps=0,0,0
+threshold, v_fps, fps, duration =0.5,1,0,0
 v_out= False
 picture_input, video_input ="", ""
-
+aprx_ratio= 0.75
+time = (duration * aprx_ratio) + 10
 
 
 
@@ -141,8 +142,18 @@ set_choice_layout=[
     [sg.T("Set Threshold\t: 0.5   (default)", pad=setting_pad, font=h3, key="-DFLT1-", size=(30,1))],
     [sg.T("V_Frame Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
     [sg.T("Write Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
-
+    [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(24, 1))]
 ]
+
+# BAR_MAX = 1000
+# progress_bar_layout = [
+#     [sg.Text('A custom progress meter')],
+#     [sg.ProgressBar(BAR_MAX, orientation='h', size=(20,20), key='-PROG-')],
+#     [sg.Cancel()]
+# ]
+
+# approximate time to process
+
 
 
 # final layout/ integrated layout
@@ -156,7 +167,8 @@ layout =[
     verifying_layout,
     write_video_layout,
     set_choice_layout,
-    [sg.B("SET", key='-SET-', pad=setting_pad), sg.B("Start Processing", key='-START-', pad=setting_pad)]
+    [sg.B("SET", key='-SET-', pad=setting_pad), sg.B("Start Processing", key='-START-', pad=setting_pad)],
+    # progress_bar_layout
 ]
 
 # starting windows
@@ -179,6 +191,8 @@ while True:  # Event Loop
     event, values = window.read()
     # print(event, values["-PICIN-"])
     # print(values["pic_in"])
+
+
     if event == sg.WIN_CLOSED or event == 'Exit':
         exit()
         break
@@ -197,15 +211,27 @@ while True:  # Event Loop
         # setting fps
         if window["-FPS1-"].get():
             window["-DFLT2-"].update("V_Frame Rate\t: 1FPS  (default)")
+            aprx_ratio= 0.75
+            time = (duration * aprx_ratio) + 10
+            window["-APRX-"].update("Estimated time to process: %s" % time)
             v_fps= 1
         if window["-FPS2-"].get():
             window["-DFLT2-"].update("V_Frame Rate\t: 2FPS")
+            aprx_ratio= 1.5
+            time = (duration * aprx_ratio) + 10
+            window["-APRX-"].update("Estimated time to process: %s" % time)
             v_fps= 2
         if window["-FPS3-"].get():
             window["-DFLT2-"].update("V_Frame Rate\t: 3FPS")
+            aprx_ratio= 2.25
+            time = (duration * aprx_ratio) + 10
+            window["-APRX-"].update("Estimated time to process: %s" % time)
             v_fps= 3
         if window["-FPS4-"].get():
             window["-DFLT2-"].update("V_Frame Rate\t: 4FPS")
+            aprx_ratio= 3
+            time= (duration* aprx_ratio)+10
+            window["-APRX-"].update("Estimated time to process: %s" %time)
             v_fps= 4
 
         # setting video write choice
@@ -219,6 +245,7 @@ while True:  # Event Loop
         print("thresholds: ", threshold)
         print("FPS: ", v_fps)
         print("V_OUT", v_out)
+        print("Estimated time to process: ", (duration* aprx_ratio)+10)    # 0.75 is ratio on my pc for v1FPS
 
 
     if event == '-LOAD-':
@@ -279,5 +306,7 @@ while True:  # Event Loop
                     print("Matched was found:")
                     print("From frame number ", frames, " to ", last_frame)
                     print("That is approximately Face Matched during time ", first_frame / (fps+ 2), "sec to ", last_frame / (fps+2))       # +2 in fps is for bugg fixes
+        else:
+            print("Inputs are not set yet!")
 
 window.close()
