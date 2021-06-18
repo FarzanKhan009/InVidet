@@ -20,14 +20,14 @@ from face_compare import compare_faces
 
 
 #                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
-#                                                      ───▄▄██▌█ Global Variable Initialization
+#                                                      ───▄▄██▌█  Variable Initialization
 #                                                        ▄▄▄▌▐██▌█
 #                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
 #                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
 
 threshold, v_fps, fps, duration =0.5,1,0,0
 v_out= False
-picture_input, video_input ="", ""
+picture_input, video_input, person_name ="", "", "Anonymous"
 aprx_ratio= 0.75
 time = (duration * aprx_ratio) + 10
 
@@ -49,10 +49,10 @@ def get_time_format(seconds, start):
 
     minutes,hours=0,0
     time_string = ""
-    if seconds > 60:    # check if it exceed 1 minut
+    if seconds >= 60:    # check if it exceed 1 minut
         minutes = int(seconds / 60)
         seconds = int(seconds % 60)
-        if minutes > 60:    # check if it exceed 1 hour
+        if minutes >= 60:    # check if it exceed 1 hour
             hours = int(minutes / 60)
             minutes = int(minutes % 60)
             if len(str(seconds))<2:     # beautifying by adding 0 in between 10:44:05
@@ -141,7 +141,7 @@ def get_time_format(seconds, start):
 #                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
 
 # to use in padding tupple
-inputs_pad_standard= ((5,5),10)
+inputs_pad_standard= ((5,5),2)
 setting_pad= ((5,5), (1,1))
 h1= "Akira 30"
 h2= "Akira 25"
@@ -226,7 +226,7 @@ left_inputs_setting_col=[
     [sg.T('Select Picture', pad=inputs_pad_standard, key="-SPIC-", size=(20,1), font=h33), sg.In(key='-PICIN-', pad=inputs_pad_standard, visible=False),
     sg.FilesBrowse(target='-PICIN-', pad=inputs_pad_standard)],
     [sg.T('Select Video', pad=inputs_pad_standard, key="-SVID-", size=(20,1), font=h33), sg.In(key='-VIDIN-', pad=inputs_pad_standard, visible=False),
-    sg.FilesBrowse(target='-VIDIN-', pad=inputs_pad_standard)],
+    sg.FilesBrowse(target='-VIDIN-', pad=((5,5),(2,15)))],
 
     # input_details_layout
     [sg.T("Details on input", pad=setting_pad, font=h33, size=(24,1))],
@@ -236,9 +236,10 @@ left_inputs_setting_col=[
     [sg.T("Video duration: ", pad=setting_pad, font=h3, key="-VDUR-", size=(24,1))],
 
     # button for load
-    [sg.B("Load Inputs", key="-LOAD-", pad=inputs_pad_standard)],
+    [sg.B("Load Inputs", key="-LOAD-", pad=((5,5), (1,10)))],
 
     # person_name_layout
+    [sg.HSeparator()],
     [sg.T("Setting", font=h2, pad=setting_pad)],
     [sg.Text("Person name if known? (optional)", pad=setting_pad, font=h33)],
     [sg.Input(key="-PRNAME-", size=(16,1), pad=setting_pad, font=h3)],
@@ -257,15 +258,17 @@ left_inputs_setting_col=[
     # write_video_layout
     [sg.T("Want to write/output a video file?", pad=setting_pad, font=h33)],
     [sg.Radio("No", "RADIO3", default=True, font=h3, pad=setting_pad, size=(6,1), key="-VOUT1-"), sg.Radio("Yes", "RADIO3", font=h3, pad=setting_pad, size=(6,1), key="-VOUT2-")],
+    [sg.B("SET", key='-SET-', pad=setting_pad)],
 
     # set_choice_layout
+    [sg.HSeparator()],
     [sg.T("Set Threshold\t: 0.5   (default)", pad=setting_pad, font=h3, key="-DFLT1-", size=(30,1))],
     [sg.T("V_Frame Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
     [sg.T("Write Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
     [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(28, 1))],
 
     # buttons
-    [sg.B("SET", key='-SET-', pad=setting_pad), sg.B("Start Processing", key='-START-', pad=setting_pad)]
+    [sg.B("Start Processing", key='-START-', pad=setting_pad)]
 ]
 
 mid_output_column=[
@@ -275,7 +278,8 @@ mid_output_column=[
 right_results_col=[
     [sg.T("Final Results", font=h2, pad=inputs_pad_standard)],
     [sg.T("Time Elapsed: ", visible=False, font=h3, key="-TIME-")],
-    [sg.T("Results", key="-RES-", size=(35,50), font=h3)]
+    [sg.T("Results", key="-RES-", size=(35,40), font=h3)],
+    # [sg.HSeparator()]
 ]
 
 
@@ -301,7 +305,7 @@ layout =[
 ]
 
 # starting windows
-window = sg.Window('InVid Detector', layout, size=(1200, 820), finalize=True)
+window = sg.Window('InVid Detector', layout, size=(1200, 830), finalize=True)
 
 
 
@@ -328,6 +332,8 @@ while True:  # Event Loop
         break
     if event == "-SET-":
         # setting threshold
+        if len(window["-PRNAME-"].get()):
+            person_name= window["-PRNAME-"].get()
         if window["-TH1-"].get():
             window["-DFLT1-"].update("Set Threshold\t: 0.4")
             threshold= 0.4
@@ -464,8 +470,8 @@ while True:  # Event Loop
                         #     end_time= str(general_duration_end_sec)[0:4] + " SS"
 
 
-                        result_output = result_output + str(find) + ". Anonymous person was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
-                        print("\n\nResults")
+                        result_output = result_output + str(find) + ". "+person_name+" was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
+                        print("\nResults")
                         print("Matched was found:")
                         print("From frame number ", frames, " to ", last_frame)
                         print("That is approximately Face Matched during time ", start_time, "sec to ", end_time)
@@ -510,8 +516,8 @@ while True:  # Event Loop
                     #     end_time = str(general_duration_end_sec)[0:4] + " SS"
 
 
-                    result_output = result_output + str(find) + ". Anonymous person was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
-                    print("\n\nResults")
+                    result_output = result_output + str(find) + ". "+person_name+"  was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
+                    print("\nResults")
                     print("Matched was found:")
                     print("From frame number ", frames, " to ", last_frame)
                     print("That is approximately Face Matched during time ", start_time, "sec to ", end_time)
