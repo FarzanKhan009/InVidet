@@ -25,8 +25,8 @@ from face_compare import compare_faces
 #                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
 #                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
 
-threshold, v_fps, fps, duration =0.5,1,0,0
-v_out= False
+threshold, v_fps, fps, duration =0.5,1,0,0      # defaults
+v_out, v_show= False, False
 picture_input, video_input, person_name ="", "", "Anonymous"
 aprx_ratio= 0.75
 time = (duration * aprx_ratio) + 10
@@ -256,8 +256,10 @@ left_inputs_setting_col=[
     [sg.Radio("V3FPS", "RADIO2", font=h3, pad=setting_pad, size=(6,1), key="-FPS3-"), sg.Radio("V4FPS", "RADIO2", font=h3, pad=setting_pad, size=(6,1), key="-FPS4-")],
 
     # write_video_layout
-    [sg.T("Want to write/output a video file?", pad=setting_pad, font=h33)],
+    [sg.T("output a video file?", pad=setting_pad, font=h33)],
     [sg.Radio("No", "RADIO3", default=True, font=h3, pad=setting_pad, size=(6,1), key="-VOUT1-"), sg.Radio("Yes", "RADIO3", font=h3, pad=setting_pad, size=(6,1), key="-VOUT2-")],
+    [sg.T("Display video??", pad=setting_pad, font=h33)],
+    [sg.Radio("No", "RADIO4", default=True, font=h3, pad=setting_pad, size=(6,1), key="-VSHOW1-"), sg.Radio("Yes", "RADIO4", font=h3, pad=setting_pad, size=(6,1), key="-VSHOW2-")],
     [sg.B("SET", key='-SET-', pad=setting_pad)],
 
     # set_choice_layout
@@ -265,6 +267,7 @@ left_inputs_setting_col=[
     [sg.T("Set Threshold\t: 0.5   (default)", pad=setting_pad, font=h3, key="-DFLT1-", size=(30,1))],
     [sg.T("V_Frame Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
     [sg.T("Write Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
+    [sg.T("Display Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT4-", size=(30, 1))],
     [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(28, 1))],
 
     # buttons
@@ -305,7 +308,7 @@ layout =[
 ]
 
 # starting windows
-window = sg.Window('InVid Detector', layout, size=(1200, 830), finalize=True)
+window = sg.Window('InVid Detector', layout, size=(1300, 910), finalize=True)
 
 
 
@@ -378,6 +381,13 @@ while True:  # Event Loop
             window["-DFLT3-"].update("Write Video\t: YES")
             v_out= True
 
+        if window["-VSHOW1-"].get():
+            window["-DFLT4-"].update("Show Video\t: NO    (default)")
+            v_out= False
+        if window["-VSHOW2-"].get():
+            window["-DFLT4-"].update("Show Video\t: YES")
+            v_show= True
+
         print("thresholds: ", threshold)
         print("FPS: ", v_fps)
         print("V_OUT", v_out)
@@ -423,7 +433,7 @@ while True:  # Event Loop
         # print(threshold, type(threshold))
     if event == "-START-":
         if len(picture_input)>0 and len(video_input)>0:
-            track_records= compare_faces(picture_input, video_input, fps, threshold, v_out, v_fps)
+            track_records= compare_faces(picture_input, video_input, fps, threshold, v_fps, person_name, v_out, v_show)
             # track_records= compare_faces(picture_input, video_input)
             if len(track_records) >0:
                 result_output= "Person FOUND!\n"        # to ipdate the results section
