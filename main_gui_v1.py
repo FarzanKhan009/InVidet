@@ -256,7 +256,7 @@ left_inputs_setting_col=[
     [sg.Radio("V3FPS", "RADIO2", font=h3, pad=setting_pad, size=(6,1), key="-FPS3-"), sg.Radio("V4FPS", "RADIO2", font=h3, pad=setting_pad, size=(6,1), key="-FPS4-")],
 
     # write_video_layout
-    [sg.T("output a video file?", pad=setting_pad, font=h33)],
+    [sg.T("Output a video file?", pad=setting_pad, font=h33)],
     [sg.Radio("No", "RADIO3", default=True, font=h3, pad=setting_pad, size=(6,1), key="-VOUT1-"), sg.Radio("Yes", "RADIO3", font=h3, pad=setting_pad, size=(6,1), key="-VOUT2-")],
     [sg.T("Display video??", pad=setting_pad, font=h33)],
     [sg.Radio("No", "RADIO4", default=True, font=h3, pad=setting_pad, size=(6,1), key="-VSHOW1-"), sg.Radio("Yes", "RADIO4", font=h3, pad=setting_pad, size=(6,1), key="-VSHOW2-")],
@@ -265,23 +265,23 @@ left_inputs_setting_col=[
     # set_choice_layout
     [sg.HSeparator()],
     [sg.T("Set Threshold\t: 0.5   (default)", pad=setting_pad, font=h3, key="-DFLT1-", size=(30,1))],
-    [sg.T("V_Frame Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
+    [sg.T("Verify Frame Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
     [sg.T("Write Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
     [sg.T("Display Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT4-", size=(30, 1))],
     [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(28, 1))],
 
     # buttons
-    [sg.B("Start Processing", key='-START-', pad=setting_pad)]
+    [sg.B("Start Processing", key='-START-', pad=setting_pad, font=h3), sg.T("Error! Inputs Can't Load", font=h3, visible=False, key="-ERR-", text_color="red")]
 ]
 
 mid_output_column=[
     [sg.T("Output Logs", font=h2, pad=inputs_pad_standard)],
-    [sg.Output(size=(50,50))]
+    [sg.Output(size=(60,60))]
 ]
 right_results_col=[
     [sg.T("Final Results", font=h2, pad=inputs_pad_standard)],
     [sg.T("Time Elapsed: ", visible=False, font=h3, key="-TIME-")],
-    [sg.T("Results", key="-RES-", size=(35,40), font=h3)],
+    [sg.T("Results", key="-RES-", size=(60,55), font=h3)],
     # [sg.HSeparator()]
 ]
 
@@ -290,7 +290,7 @@ right_results_col=[
 
 # final layout/ integrated layout
 layout =[
-    [sg.Column(title_layout, element_justification='center', pad=(440,0))],
+    [sg.Column(title_layout, element_justification='center', pad=((470,0),1))],
     [sg.HSeparator()],
     [sg.Column(left_inputs_setting_col, element_justification="left"), sg.VSeperator(), sg.Col(mid_output_column, element_justification="left"), sg.VSeperator(),sg.Column(right_results_col, element_justification="left") ]
     # [sg.T("\t\t\t\t\t\t\t\t\t"), sg.Col([[sg.Output(size=(30,10))]], element_justification='right')],
@@ -367,7 +367,7 @@ while True:  # Event Loop
             window["-APRX-"].update("Estimated time to process: %s" % time)
             v_fps= 3
         if window["-FPS4-"].get():
-            window["-DFLT2-"].update("V_Frame Rate\t: 4FPS")
+            window["-DFLT2-"].update("Verify Frame Rate\t: 4FPS")
             aprx_ratio= 3
             time= (duration* aprx_ratio)+10
             window["-APRX-"].update("Estimated time to process: %s" %time)
@@ -427,12 +427,15 @@ while True:  # Event Loop
 
         # window.refresh()
 
-
+        if len(picture_input)>0 and len(video_input)>0:
+            window["-ERR-"].update(visible=False)
+            window.refresh()
 
         # threshold= window["TH1"].get()
         # print(threshold, type(threshold))
     if event == "-START-":
         if len(picture_input)>0 and len(video_input)>0:
+            window["-ERR-"].update(visible=False)
             track_records= compare_faces(picture_input, video_input, fps, threshold, v_fps, person_name, v_out, v_show)
             # track_records= compare_faces(picture_input, video_input)
             if len(track_records) >0:
@@ -446,6 +449,8 @@ while True:  # Event Loop
                 general_duration_end_min = 0
                 general_duration_end_hour = 0
                 start_time, end_time= "", ""
+
+
                 for frames in track_records:
                     current_index= track_records.index(frames)
                     if current_index % 2 ==0:
@@ -537,6 +542,8 @@ while True:  # Event Loop
                 result_output= "Person was not Found!\n"        # to ipdate the results section
                 window["-RES"].update(result_output)
         else:
+            window.refresh()
+            window["-ERR-"].update(visible=True)
             print("Inputs are not set yet!")
 
 window.close()
