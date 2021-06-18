@@ -32,10 +32,13 @@ def get_embedding(face):
     return embeddings
 
 
-def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
+def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v_show):
     # setting divisible by using v_fps to fast or slow the process i.e. how much frames to skip
+    # frame_array= (10,10,255)
+    # out=0
+
     divisible=0
-    tolerance=0
+    tolerance=4
     if v_fps==1:
         divisible =  fps
         tolerance = 2
@@ -69,7 +72,13 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
     vid_url = vid_url[1][1:]
 
     cap = cv2.VideoCapture(vid_url)
-    countframes = 1
+
+    # if only video write option is true; then write
+    if v_out:
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter('pic_input/output.avi', fourcc, v_fps, (640, 480))
+
+    countframes = 0
 
     # taking some variables for tracking purpose
     first_marked_frame, last_marked_frame, not_matched, outer_no_face, match= 0, 0, 0, 0, 0
@@ -95,6 +104,7 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
         # RGB is preferred color while detection faces
         try:
             rgb_frame = frame[:, :, ::-1]
+            frame_array = np.array(rgb_frame)
         except:
             print("video file has no more frames, total frames= ", countframes)
             break
@@ -123,7 +133,6 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
         if len(faces) > 0:
             print('found %s faces in frame: ' %len(faces), countframes)
             outer_no_face = 0
-            frame_array = np.array(rgb_frame)
             # frame_array = asarray(rgb_frame)
             # taking variable face_num; to iterate in loop; for detecting multiple faces in single frame
             face_num = 0
@@ -161,7 +170,16 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
                 # implementing deepface #no more neeced
                 # recognised= df.verify(pic_face, frame_face, "Facenet")
                 # print("Face number in current frame: ", face_num, "Above reuslts are for frame", countframes)
-                frame_face_embeddings = get_embedding(frame_face)
+
+
+                # bug fix
+                # at testing while getting embedding it raised exception, says in resize function of facenet
+                try:
+                    frame_face_embeddings = get_embedding(frame_face)
+                except:
+                    print("Could not get embedding for frame ", countframes, "; Continue")
+                    continue
+
                 # getting distance through cosine
                 distance = cosine(pic_embeddings, frame_face_embeddings)
                 # used threshold provided by user from GUI module
@@ -177,6 +195,15 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
 
                 if recognised == True:
                     match += 1
+
+                    # only show frames or video if it set true
+                    if v_show:
+                        text = person_name + " , distance: " + str(distance)[0:4]
+                        y = y1 - 10 if y1 - 10 > 10 else y1 + 10
+                        cv2.rectangle(frame_array, (x1, y1), (x2, y2), (155, 25, 25), 2)
+                        cv2.putText(frame_array, text, (x1, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (155, 25, 25), 2)
+
+
                     if match == 1:
                         first_marked_frame = countframes
                         print("First Match at frame: ", countframes)
@@ -224,6 +251,16 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
         # if countframes >= 130:
         #     break
 
+        # only write if v_out is true
+        if v_out:
+            out.write(frame_array[:, :, ::-1])
+
+        # only show if it sets true
+        if v_show:
+            cv2.imshow("Image", frame_array[:, :, ::-1])
+            cv2.waitKey(1)
+
+
     # for last tracking duration
     if first_marked_frame > 0:
         last_marked_frame = countframes
@@ -237,6 +274,8 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
 
     # releasing video and destroying windows
     cap.release()
+    out.release()
+    cv2.destroyAllWindows()
     return tracked_list
 
 # img= extract_align_face("pic_input/2021-05-21-093418.jpg")

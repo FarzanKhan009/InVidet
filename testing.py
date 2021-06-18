@@ -177,3 +177,5 @@ print("score= ", cosi)
 
 # print("0 0 index ", rgb_faces[0])
 # print("complete lis: ", rgb_faces)
+
+
