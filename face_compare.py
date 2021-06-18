@@ -188,22 +188,26 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_out, v_fps):
                 else:
                     not_matched += 1
                     if not_matched == tolerance:
-                        last_marked_frame = countframes - (tolerance * divisible)
-                        print("Last Match at frame: ", countframes - (tolerance* divisible))
+                        if first_marked_frame > 0:
+                            last_marked_frame = int(countframes - (tolerance * divisible))
 
-                if last_marked_frame > 0:
-                    tracked_list.append(first_marked_frame)
-                    tracked_list.append(last_marked_frame)
+                            tracked_list.append(first_marked_frame)
+                            tracked_list.append(last_marked_frame)
 
-                    match = 0
-                    first_marked_frame = 0
-                    last_marked_frame = 0
+                            # match = 0
+                            first_marked_frame = 0
+                            last_marked_frame = 0
+                            match= 0
+                            print("Last Match at frame: ", countframes - (tolerance* divisible))
+
+                # if last_marked_frame > 0:
+
 
         else:
             outer_no_face += 1
             if outer_no_face == tolerance:
                 if first_marked_frame > 0:
-                    last_marked_frame = countframes - (tolerance * divisible)
+                    last_marked_frame = int(countframes - (tolerance * divisible))
                     tracked_list.append(first_marked_frame)
                     tracked_list.append(last_marked_frame)
 
