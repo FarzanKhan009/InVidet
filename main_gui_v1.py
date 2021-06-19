@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 from extract_face_nparray import extract_face
 from create_npz_file import create_npz_faces
 from plot import plot_from_npz
+import times
 from face_compare import compare_faces
 
 
@@ -26,11 +27,13 @@ from face_compare import compare_faces
 #                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
 
 threshold, v_fps, fps, duration =0.5,1,0,0      # defaults
-v_out, v_show= False, False
+v_out, v_show, video_file= False, False, True
 picture_input, video_input, person_name ="", "", "Anonymous"
 aprx_ratio= 0.75
 time = (duration * aprx_ratio) + 10
 first = 0       #to check first loop in GUI, for fetching results
+
+
 
 #                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
 #                                                      ───▄▄██▌█ Some Functions
@@ -123,7 +126,7 @@ left_inputs_setting_col=[
     [sg.T('Select Picture', pad=inputs_pad_standard, key="-SPIC-", size=(20,1), font=h33), sg.In(key='-PICIN-', pad=inputs_pad_standard, visible=False),
     sg.FilesBrowse(target='-PICIN-', pad=inputs_pad_standard)],
     [sg.T('Select Video', pad=inputs_pad_standard, key="-SVID-", size=(20,1), font=h33), sg.In(key='-VIDIN-', pad=inputs_pad_standard, visible=False),
-    sg.FilesBrowse(target='-VIDIN-', pad=((5,5),(2,15)))],
+    sg.FilesBrowse(target='-VIDIN-', pad=((5,5),(2,15)), disabled=False, key="-VBRS-")],
 
     # input_details_layout
     [sg.T("Details on input", pad=setting_pad, font=h33, size=(24,1))],
@@ -133,7 +136,7 @@ left_inputs_setting_col=[
     [sg.T("Video duration: ", pad=setting_pad, font=h3, key="-VDUR-", size=(24,1))],
 
     # button for load
-    [sg.B("Load Inputs", key="-LOAD-", pad=((5,5), (1,10)))],
+    [sg.B("Load Inputs", key="-LOAD-", pad=((5,5), (1,10))), sg.Radio("Cam Stream", "RADIO5", enable_events=True,  font=h3, pad=(0,0), size=(12,1), key="-VIN1-"),sg.Radio("Video File", "RADIO5", enable_events=True, default=True, font=h3, pad=(0,0), size=(12,1), key="-VIN2-")],
 
     # person_name_layout
     [sg.HSeparator()],
@@ -218,9 +221,20 @@ while True:  # Event Loop
     if event == sg.WIN_CLOSED or event == 'Exit':
         exit()
         break
+
+    # handling video stream choice
+    if event == "-VIN1-":
+        video_file=False
+        print("[INFO] Video source changed to Cam Stream")
+        window["-VBRS-"].update(disabled=True)
+    if event == "-VIN2-":
+        video_file=True
+        print("[INFO] Video source changed to video file on disc")
+        window["-VBRS-"].update(disabled=False)
+
     if event == "-SET-":
         # setting threshold
-        print("[INFO] Setting choices")
+        # print("[INFO] Setting choices")
         if len(window["-PRNAME-"].get()):
             person_name= window["-PRNAME-"].get()
         if window["-TH1-"].get():
@@ -269,7 +283,7 @@ while True:  # Event Loop
 
         if window["-VSHOW1-"].get():
             window["-DFLT4-"].update("Show Video\t: NO    (default)")
-            v_out= False
+            v_show= False
         if window["-VSHOW2-"].get():
             window["-DFLT4-"].update("Show Video\t: YES")
             v_show= True
@@ -339,11 +353,17 @@ while True:  # Event Loop
                 print("[INFO] Fetching results for the ", first, " time")
             print("[INFO] Starting process!")
             print("[INFO] 10s delay on loading TensorFlow")
-            track_records= compare_faces(picture_input, video_input, fps, threshold, v_fps, person_name, v_out, v_show)
+
+            # to monitor how much time it took
+            process_start = times.now()
+            track_records= compare_faces(picture_input, video_input, fps, threshold, v_fps, person_name, v_out, v_show, video_file)
             # track_records= compare_faces(picture_input, video_input)
+            process_elapsed_time = times.now() - process_start
             if len(track_records) >0:
                 print("[INFO] Person found in the video file")
-                result_output= "Person FOUND!\n"        # to update the results section
+                print("[INFO] Process took", process_elapsed_time, "to complete")
+                result_output_0= "Person FOUND!\t Elapsed Time "+ str(process_elapsed_time)[0:10]  +"\n\n"      # to update the results section
+                result_output_1=""
                 find=1      #to serialize results
 
                 # initializing to use at out side the loop
@@ -359,31 +379,37 @@ while True:  # Event Loop
                         end_time= get_time_format((last_frame/fps), False)
 
 
-                        result_output = result_output + str(find) + ". " +person_name+ " was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
-                        print("\n[RESULTS] ", person_name, "was found:")
+                        result_output_1 = result_output_1 + str(find) + ". " +person_name+ " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                        print("\n[RESULTS]", person_name, "was found:")
                         print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
-                        print("[RESULTS] That is approximately Face Matched during time ", start_time, "sec to ", end_time)
+                        print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time, "sec to ", end_time)
                         find+=1
                 find+= 1
 
                 # to handle remaining last time
                 if len(track_records) % 2 != 0:
+                    if len(track_records)==1:
+                        if str(track_records[0]) =="ERROR":
+                            print("[ERROR] Fatal exception raised!\n[ERROR] Video cant be loaded")
+                            window["-RES-"].update("Exception RAISED, Video Can't Load!\nCheck Video Path again")
+                            break
+
                     frames = track_records[len(track_records) - 2]
                     last_frame = track_records[len(track_records) - 1]
 
                     start_time = get_time_format((frames / fps), True)
                     end_time = get_time_format((last_frame / fps), False)
 
-                    result_output = result_output + str(find) + ". " + person_name + " was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
-                    print("\n[RESULTS] ", person_name, "was found:")
+                    result_output_1 = result_output_1 + str(find) + ". " + person_name + " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                    print("\n[RESULTS]", person_name, "was found:")
                     print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
-                    print("[RESULTS] That is approximately Face Matched during time ", start_time, "sec to ", end_time)
+                    print("[RESULTS] That is approximately Face Matched during time \n[RESULTS]", start_time, "sec to ", end_time)
                 window.refresh()
-                window["-RES-"].update(result_output)
+                window["-RES-"].update(result_output_0+result_output_1)
             else:
-                result_output= person_name+ " was not Found!\n"        # to update the results section
+                result_output= person_name+ " was not Found!\tElapsed Time "+str(process_elapsed_time)[0:10]     # to update the results section
                 print("[RESULTS] ", person_name, " was not found in the video file")
-                window["-RES"].update(result_output)
+                window["-RES-"].update(result_output)
         else:
             window.refresh()
             window["-ERR-"].update(visible=True)
