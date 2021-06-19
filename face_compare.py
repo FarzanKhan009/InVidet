@@ -40,6 +40,11 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     print("[INFO] Module Compare Faces Received Call")
     divisible=0
     tolerance=4
+
+    # checking it is a cam stream, if it is, setting fps by self, not relying on cv2 to get fps from video file or else it raised exception modulo by zero
+    #bug fix 1.4
+    if video_file == False:
+        fps=30
     if v_fps==1:
         divisible =  fps
         tolerance = 2
@@ -61,6 +66,7 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     pic_url = pic_url[1][1:]
     # getting aligned face
     # pic_face= extract_align_face(pic_url)       #pic_face is aligned np array of face
+    # print(pic_url)
     pic_face_array = np.array(Image.open(pic_url))
     pic_face = encodder.extract(pic_url)
     pic_face = pic_face[0]['box']
@@ -71,8 +77,7 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     pic_face = expand_dims(pic_face, axis=0)
     pic_embeddings = encodder.embeddings(np.array(pic_face))
 
-    vid_url = vid_url.rsplit("InVidett", 1)
-    vid_url = vid_url[1][1:]
+
 
     total_frames= 99
 
@@ -83,6 +88,8 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
 
     if video_file:
         try:
+            vid_url = vid_url.rsplit("InVidett", 1)
+            vid_url = vid_url[1][1:]
             cap = cv2.VideoCapture(vid_url)
             print("[INFO] Video file is successfully loaded")
 
@@ -275,8 +282,8 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
             cv2.imshow("InVidet", frame_array[:, :, ::-1])
             # ideal is waitkey(0), but (1) is working for me
             # cv2.waitKey(1)
-            # if cv2.waitKey(0) & 0xFF == ord('q'):
-            #     break
+            if cv2.waitKey(5) & 0xFF == ord('q'):
+                break
 
     # for last verified  frame, if it is not tracked
     if first_marked_frame > 0:

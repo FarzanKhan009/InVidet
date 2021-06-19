@@ -342,8 +342,24 @@ while True:  # Event Loop
         # threshold= window["TH1"].get()
         # print(threshold, type(threshold))
     if event == "-START-":
-        if len(picture_input)>0 and len(video_input)>0:
+        if len(picture_input)<1:
+            print("[ERROR] Picture is not loaded yet")
+            window["-ERR-"].update(visible=True)
+            continue
+        else:
             window["-ERR-"].update(visible=False)
+
+        if video_file and len(video_input)<1:
+            print("[ERROR] Video is not loaded yet")
+            window["-ERR-"].update(visible=True)
+            continue
+        else:
+            window["-ERR-"].update(visible=False)
+
+        window.refresh()
+
+
+        if len(picture_input)>0 and (len(video_input)>0 or video_file==False):
             if first>0:
                 window["-RES-"].update("Fetching new results")
                 print("[INFO] Fetching results for the ", first, " time")
@@ -375,6 +391,8 @@ while True:  # Event Loop
                     if current_index % 2 ==0:
                         last_frame= track_records[current_index+1]
                         # for HH:MM:SS time format
+                        if not video_file:
+                            fps=30
                         start_time = get_time_format((frames/fps), True)
                         end_time= get_time_format((last_frame/fps), False)
 
@@ -410,9 +428,5 @@ while True:  # Event Loop
                 result_output= person_name+ " was not Found!\tElapsed Time "+str(process_elapsed_time)[0:10]     # to update the results section
                 print("[RESULTS] ", person_name, " was not found in the video file")
                 window["-RES-"].update(result_output)
-        else:
-            window.refresh()
-            window["-ERR-"].update(visible=True)
-            print("[ERROR] Inputs are not set yet!")
 
 window.close()
