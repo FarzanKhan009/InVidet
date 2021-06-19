@@ -36,6 +36,8 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     # setting divisible by using v_fps to fast or slow the process i.e. how much frames to skip
     # frame_array= (10,10,255)
     # out=0
+    print("[INFO] TensorFlow Loaded")
+    print("[INFO] Module Compare Faces Received Call")
 
     divisible=0
     tolerance=4
@@ -51,8 +53,10 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     if v_fps==4:
         tolerance = 3
         divisible = fps/4
+    print("[INFO] Tolerance set to ", tolerance, " for missing frames")
+    print("[INFO] Calculating divisible based on tolerance...")
+    print("[INFO] Divisible set to", divisible)
 
-    # model = load_model('facenet_keras.h5')      # model for getting embeddings
     # slicing path string because folder reside in project directory
     pic_url = pic_url.rsplit("InVidett", 1)
     pic_url = pic_url[1][1:]
@@ -71,19 +75,30 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     vid_url = vid_url.rsplit("InVidett", 1)
     vid_url = vid_url[1][1:]
 
-    cap = cv2.VideoCapture(vid_url)
+    # initializing list() to track frames
+    tracked_list = list()
+    try:
+        cap = cv2.VideoCapture(vid_url)
+        print("[INFO] Video file is successfully loaded")
+    except:
+        print("[ERROR] Video is unable to load, check path")
+        tracked_list= ['Error']
+
 
     # if only video write option is true; then write
     if v_out:
+        print("[INFO] Video write option is set TRUE, initializing")
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out = cv2.VideoWriter('pic_input/output.avi', fourcc, v_fps, (640, 480))
+        print("[INFO] Output video path is set to pic_input/output.avi")
 
+    # initializing frame counts
     countframes = 0
 
     # taking some variables for tracking purpose
     first_marked_frame, last_marked_frame, not_matched, outer_no_face, match= 0, 0, 0, 0, 0
     # match = 0
-    tracked_list = list()
+
 
     # faces_list = list()
     while True:
@@ -274,7 +289,8 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
 
     # releasing video and destroying windows
     cap.release()
-    out.release()
+    if v_out:
+        out.release()
     cv2.destroyAllWindows()
     return tracked_list
 

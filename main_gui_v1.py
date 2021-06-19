@@ -30,11 +30,7 @@ v_out, v_show= False, False
 picture_input, video_input, person_name ="", "", "Anonymous"
 aprx_ratio= 0.75
 time = (duration * aprx_ratio) + 10
-
-
-
-
-
+first = 0       #to check first loop in GUI, for fetching results
 
 #                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
 #                                                      ───▄▄██▌█ Some Functions
@@ -90,50 +86,6 @@ def get_time_format(seconds, start):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#getting face np array
-
-# def get_face(picture_input):
-#     # slicing path string because folder reside in project directory
-#     picture_input = picture_input.rsplit("InVidett", 1)
-#     picture_input = picture_input[1][1:]
-#     # calling module extract_face_nparraay to get the face list
-#     return extract_face(picture_input)
-
-# def get_video_npz(video_input):
-#     video_input= video_input.rsplit("InVidett",1)[1][1:]
-#
-#     # return create_npz_faces(video_input)
-#
-#     # creating npz file
-#     create_npz_faces(video_input)
-#     return np.load("video_faces.npz")["arr_0"]
-
-# def get_video_faces_list(video_input):
-#     video_input = video_input.rsplit("InVidett", 1)[1][1:]
-#     return create_npz_faces(video_input)
-
-
-
-
-
 #                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
 #                                                      ───▄▄██▌█ Setting Layouts
 #                                                        ▄▄▄▌▐██▌█
@@ -155,61 +107,6 @@ title_layout = [[
     sg.Text('InVid Detector',justification='center', font=h1)
 ]]
 
-# taking inputs/ url for picture and video file, layout
-# picture_video_selection_layout= [
-#     [sg.T("Inputs", font=h2, pad=inputs_pad_standard)],
-#     [sg.T('Select Picture', pad=inputs_pad_standard, key="-SPIC-", size=(20,1), font=h33), sg.In(key='-PICIN-', pad=inputs_pad_standard, visible=False),
-#     sg.FilesBrowse(target='-PICIN-', pad=inputs_pad_standard)],
-#
-#     [sg.T('Select Video', pad=inputs_pad_standard, key="-SVID-", size=(20,1), font=h33), sg.In(key='-VIDIN-', pad=inputs_pad_standard, visible=False),
-#     sg.FilesBrowse(target='-VIDIN-', pad=inputs_pad_standard)]
-# ]
-
-# person name input
-# person_name_layout= [
-#     [sg.T("Setting", font=h2, pad=setting_pad)],
-#     [sg.Text("Person name if known? (optional)", pad=setting_pad, font=h33)],
-#     [sg.Input(key="-PRNAME-", size=(16,1), pad=setting_pad, font=h3)]
-# ]
-
-
-# threshold layout setting
-# threshold_layout=[
-#     [sg.T("Select a threshold value", pad=setting_pad, font=h33)],
-#     [sg.Radio('0.4', "RADIO1", size=(4, 1), pad= setting_pad, font=h3, key="-TH1-"),
-#     sg.Radio('0.5', "RADIO1", default=True, size=(4, 1), pad= setting_pad, font=h3, key="-TH2-"),
-#     sg.Radio('0.6', "RADIO1", size=(4,1), pad= setting_pad, font=h3, key="-TH3-")]
-# ]
-
-# verifying fps layout
-# verifying_layout=[
-#     [sg.T("Select Verifying fps", pad=setting_pad, font=h33)],
-#     [sg.Radio("V1FPS", "RADIO2", default=True, font=h3, pad=setting_pad, size=(6,1), key="-FPS1-"), sg.Radio("V2FPS", "RADIO2", font=h3, pad=setting_pad, size=(6,1), key="-FPS2-")],
-#     [sg.Radio("V3FPS", "RADIO2", font=h3, pad=setting_pad, size=(6,1), key="-FPS3-"), sg.Radio("V4FPS", "RADIO2", font=h3, pad=setting_pad, size=(6,1), key="-FPS4-")]
-# ]
-
-# video write or not
-# write_video_layout=[
-#     [sg.T("Want to write/output a video file?", pad=setting_pad, font=h33)],
-#     [sg.Radio("No", "RADIO3", default=True, font=h3, pad=setting_pad, size=(6,1), key="-VOUT1-"), sg.Radio("Yes", "RADIO3", font=h3, pad=setting_pad, size=(6,1), key="-VOUT2-")]
-# ]
-
-# video detail layout
-# input_details_layout=[
-#     [sg.T("Details on input", pad=setting_pad, font=h33, size=(24,1))],
-#     [sg.T("Picture name: ", pad=setting_pad, font=h3, key="-PNAME-", size=(24,1))],
-#     [sg.T("Video name: ", pad=setting_pad, font=h3, key="-VNAME", size=(24,1))],
-#     [sg.T("Video frame rate: ", pad=setting_pad, font=h3, key="-VFPS-", size=(24,1))],
-#     [sg.T("Video duration: ", pad=setting_pad, font=h3, key="-VDUR-", size=(24,1))]
-# ]
-
-# setting choices layout
-# set_choice_layout=[
-#     [sg.T("Set Threshold\t: 0.5   (default)", pad=setting_pad, font=h3, key="-DFLT1-", size=(30,1))],
-#     [sg.T("V_Frame Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
-#     [sg.T("Write Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
-#     [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(28, 1))]
-# ]
 
 # BAR_MAX = 1000
 # progress_bar_layout = [
@@ -218,8 +115,8 @@ title_layout = [[
 #     [sg.Cancel()]
 # ]
 
-# approximate time to process
-# var=person_name_layout+threshold_layout+verifying_layout+write_video_layout+set_choice_layout
+
+
 left_inputs_setting_col=[
     # picture_video_selection_layout
     [sg.T("Inputs", font=h2, pad=inputs_pad_standard)],
@@ -262,12 +159,14 @@ left_inputs_setting_col=[
     [sg.Radio("No", "RADIO4", default=True, font=h3, pad=setting_pad, size=(6,1), key="-VSHOW1-"), sg.Radio("Yes", "RADIO4", font=h3, pad=setting_pad, size=(6,1), key="-VSHOW2-")],
     [sg.B("SET", key='-SET-', pad=setting_pad)],
 
-    # set_choice_layout
+    # horisotal
     [sg.HSeparator()],
+    # set_choice_layout
     [sg.T("Set Threshold\t: 0.5   (default)", pad=setting_pad, font=h3, key="-DFLT1-", size=(30,1))],
     [sg.T("Verify Frame Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
     [sg.T("Write Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
     [sg.T("Display Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT4-", size=(30, 1))],
+    # aprx time to process
     [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(28, 1))],
 
     # buttons
@@ -281,35 +180,21 @@ mid_output_column=[
 right_results_col=[
     [sg.T("Final Results", font=h2, pad=inputs_pad_standard)],
     [sg.T("Time Elapsed: ", visible=False, font=h3, key="-TIME-")],
-    [sg.T("Results", key="-RES-", size=(60,55), font=h3)],
+    [sg.T("Results", key="-RES-", size=(50,55), font=h3)],
     # [sg.HSeparator()]
 ]
-
-
-
 
 # final layout/ integrated layout
 layout =[
     [sg.Column(title_layout, element_justification='center', pad=((470,0),1))],
     [sg.HSeparator()],
     [sg.Column(left_inputs_setting_col, element_justification="left"), sg.VSeperator(), sg.Col(mid_output_column, element_justification="left"), sg.VSeperator(),sg.Column(right_results_col, element_justification="left") ]
-    # [sg.T("\t\t\t\t\t\t\t\t\t"), sg.Col([[sg.Output(size=(30,10))]], element_justification='right')],
-    # [sg.Output(size=(60,10, element_justification= 'right'))],
-    # picture_video_selection_layout,
-    # input_details_layout,
-    # [sg.B("Load Inputs", key="-LOAD-", pad=inputs_pad_standard)],
-    # person_name_layout,
-    # threshold_layout,
-    # verifying_layout,
-    # write_video_layout,
-    # set_choice_layout,
-    # [sg.B("SET", key='-SET-', pad=setting_pad), sg.B("Start Processing", key='-START-', pad=setting_pad)],
-    # progress_bar_layout
 ]
 
 # starting windows
+print("[INFO] Launching GUI")
 window = sg.Window('InVid Detector', layout, size=(1300, 910), finalize=True)
-
+print("[INFO] GUI launched")
 
 
 
@@ -335,6 +220,7 @@ while True:  # Event Loop
         break
     if event == "-SET-":
         # setting threshold
+        print("[INFO] Setting choices")
         if len(window["-PRNAME-"].get()):
             person_name= window["-PRNAME-"].get()
         if window["-TH1-"].get():
@@ -349,19 +235,19 @@ while True:  # Event Loop
 
         # setting fps
         if window["-FPS1-"].get():
-            window["-DFLT2-"].update("V_Frame Rate\t: 1FPS  (default)")
+            window["-DFLT2-"].update("Verify Frame Rate\t: 1FPS  (default)")
             aprx_ratio= 0.75
             time = (duration * aprx_ratio) + 10
             window["-APRX-"].update("Estimated time to process: %s" % time)
             v_fps= 1
         if window["-FPS2-"].get():
-            window["-DFLT2-"].update("V_Frame Rate\t: 2FPS")
+            window["-DFLT2-"].update("Verify Frame Rate\t: 2FPS")
             aprx_ratio= 1.5
             time = (duration * aprx_ratio) + 10
             window["-APRX-"].update("Estimated time to process: %s" % time)
             v_fps= 2
         if window["-FPS3-"].get():
-            window["-DFLT2-"].update("V_Frame Rate\t: 3FPS")
+            window["-DFLT2-"].update("Verify Frame Rate\t: 3FPS")
             aprx_ratio= 2.25
             time = (duration * aprx_ratio) + 10
             window["-APRX-"].update("Estimated time to process: %s" % time)
@@ -388,10 +274,12 @@ while True:  # Event Loop
             window["-DFLT4-"].update("Show Video\t: YES")
             v_show= True
 
-        print("thresholds: ", threshold)
-        print("FPS: ", v_fps)
-        print("V_OUT", v_out)
-        print("Estimated time to process: ", (duration* aprx_ratio)+10)    # 0.75 is ratio on my pc for v1FPS
+        print("\n[INFO] User choices")
+        print("[INFO] Thresholds: ", threshold)
+        print("[INFO] FPS: ", v_fps)
+        print("[INFO] Video OUT: ", v_out)
+        print("[INFO] Video SHOW: ", v_show)
+        print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10)    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
 
 
     if event == '-LOAD-':
@@ -399,13 +287,17 @@ while True:  # Event Loop
         video_input= values["-VIDIN-"]
         window.refresh()
         if len(picture_input)>0:
-            window["-SPIC-"].update("Picture is SELECTED")
+            print("[INFO] Picture is loaded")
+            window["-SPIC-"].update("Picture SELECTED")
             pic_url = picture_input.rsplit("/", 1)
             pic_url = "Picture name: %s" % pic_url[1]
             window["-PNAME-"].update(value=str(pic_url))
-
+        else:
+            print("[WARN] Picture is MISSING")
+        window.refresh()
         if len(video_input)>0:
-            window["-SVID-"].update("Video is SELECTED")
+            print("[INFO] Video is loaded")
+            window["-SVID-"].update("Video SELECTED")
             # obtaining fps and setting text
 
             vid_url = video_input.rsplit("dett", 1)
@@ -424,10 +316,12 @@ while True:  # Event Loop
             window["-VNAME"].update(value=str(vid_name))
             window["-VFPS-"].update(value=str(message_fps))
             window["-VDUR-"].update(value= f'{"Video duration: "}{duration}{"sec"}')
-
+        else:
+            print("[WARN] Video is MISSING")
         # window.refresh()
 
         if len(picture_input)>0 and len(video_input)>0:
+            print("[INFO] Inputs are loaded successfully")
             window["-ERR-"].update(visible=False)
             window.refresh()
 
@@ -436,60 +330,39 @@ while True:  # Event Loop
     if event == "-START-":
         if len(picture_input)>0 and len(video_input)>0:
             window["-ERR-"].update(visible=False)
+            if first>0:
+                window["-RES-"].update("Fetching new results")
+                print("[INFO] Fetching results for the ", first, " time")
+                first+= 1
+            else:
+                first += 1
+                print("[INFO] Fetching results for the ", first, " time")
+            print("[INFO] Starting process!")
+            print("[INFO] 10s delay on loading TensorFlow")
             track_records= compare_faces(picture_input, video_input, fps, threshold, v_fps, person_name, v_out, v_show)
             # track_records= compare_faces(picture_input, video_input)
             if len(track_records) >0:
-                result_output= "Person FOUND!\n"        # to ipdate the results section
-                find=1
-                general_duration_start_sec = 0
-                general_duration_start_min = 0
-                general_duration_start_hour = 0
+                print("[INFO] Person found in the video file")
+                result_output= "Person FOUND!\n"        # to update the results section
+                find=1      #to serialize results
 
-                general_duration_end_sec = 0
-                general_duration_end_min = 0
-                general_duration_end_hour = 0
+                # initializing to use at out side the loop
                 start_time, end_time= "", ""
 
-
+                # looping results list which returned from face_compare
                 for frames in track_records:
                     current_index= track_records.index(frames)
                     if current_index % 2 ==0:
                         last_frame= track_records[current_index+1]
                         # for HH:MM:SS time format
-                        # general_duration_start_sec= frames/(fps+2)
                         start_time = get_time_format((frames/fps), True)
                         end_time= get_time_format((last_frame/fps), False)
-                        # general_duration_end_sec= last_frame/(fps+2)
-                        # if general_duration_start_sec >60:
-                        #     general_duration_start_min= int(general_duration_start_sec/60)
-                        #     general_duration_start_sec= int(general_duration_start_sec%60)
-                        #     if general_duration_start_min >60:
-                        #         general_duration_start_hour= int(general_duration_start_min/60)
-                        #         general_duration_start_min= int(general_duration_start_min%60)
-                        #         start_time = str(general_duration_start_hour) + ":" + str(general_duration_start_min) + ":" + str(general_duration_start_sec) + " HH:MM:SS"
-                        #     else:
-                        #         start_time = str(general_duration_start_min) + ":" + str(general_duration_start_sec) + " MM:SS"
-                        # else:
-                        #     start_time= str(general_duration_start_sec)[0:4] + " SS"
-
-                        # if general_duration_end_sec>60:
-                        #     general_duration_end_min= int(general_duration_end_sec/60)
-                        #     general_duration_end_sec= int(general_duration_end_sec%60)
-                        #     if general_duration_end_min >60:
-                        #         general_duration_end_hour= int(general_duration_end_min/60)
-                        #         general_duration_end_min= int(general_duration_end_min%60)
-                        #         end_time = str(general_duration_end_hour) + ":" + str(general_duration_end_min) + ":" + str(general_duration_end_sec) + " HH:MM:SS"
-                        #     else:
-                        #         end_time= str(general_duration_end_min) + ":" + str(general_duration_end_sec) + " MM:SS"
-                        # else:
-                        #     end_time= str(general_duration_end_sec)[0:4] + " SS"
 
 
-                        result_output = result_output + str(find) + ". "+person_name+" was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
-                        print("\nResults")
-                        print("Matched was found:")
-                        print("From frame number ", frames, " to ", last_frame)
-                        print("That is approximately Face Matched during time ", start_time, "sec to ", end_time)
+                        result_output = result_output + str(find) + ". " +person_name+ " was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
+                        print("\n[RESULTS] ", person_name, "was found:")
+                        print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
+                        print("[RESULTS] That is approximately Face Matched during time ", start_time, "sec to ", end_time)
                         find+=1
                 find+= 1
 
@@ -500,50 +373,20 @@ while True:  # Event Loop
 
                     start_time = get_time_format((frames / fps), True)
                     end_time = get_time_format((last_frame / fps), False)
-                    # handing time format HH:MM:SS
-                    # general_duration_start_sec = frames / (fps + 2)
-                    # general_duration_end_sec = last_frame / (fps + 2)
-                    # if general_duration_start_sec > 60:
-                    #     general_duration_start_min = int(general_duration_start_sec / 60)
-                    #     general_duration_start_sec = int(general_duration_start_sec % 60)
-                    #     if general_duration_start_min > 60:
-                    #         general_duration_start_hour = int(general_duration_start_min / 60)
-                    #         general_duration_start_min = int(general_duration_start_min % 60)
-                    #         start_time = str(general_duration_start_hour) + ":" + str(
-                    #             general_duration_start_min) + ":" + str(general_duration_start_sec) + " HH:MM:SS"
-                    #     else:
-                    #         start_time = str(general_duration_start_min) + ":" + str(
-                    #             general_duration_start_sec) + " MM:SS"
-                    # else:
-                    #     start_time = str(general_duration_start_sec)[0:4] + " SS"
 
-                    # if general_duration_end_sec > 60:
-                    #     general_duration_end_min = int(general_duration_end_sec / 60)
-                    #     general_duration_end_sec = int(general_duration_end_sec % 60)
-                    #     if general_duration_end_min > 60:
-                    #         general_duration_end_hour = int(general_duration_end_min / 60)
-                    #         general_duration_end_min = int(general_duration_end_min % 60)
-                    #         end_time = str(general_duration_end_hour) + ":" + str(general_duration_end_min) + ":" + str(
-                    #             general_duration_end_sec) + " HH:MM:SS"
-                    #     else:
-                    #         end_time = str(general_duration_end_min) + ":" + str(general_duration_end_sec) + " MM:SS"
-                    # else:
-                    #     end_time = str(general_duration_end_sec)[0:4] + " SS"
-
-
-                    result_output = result_output + str(find) + ". "+person_name+"  was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
-                    print("\nResults")
-                    print("Matched was found:")
-                    print("From frame number ", frames, " to ", last_frame)
-                    print("That is approximately Face Matched during time ", start_time, "sec to ", end_time)
+                    result_output = result_output + str(find) + ". " + person_name + " was found approximately during " + str(start_time) + " to " + str(end_time) + ".\n"
+                    print("\n[RESULTS] ", person_name, "was found:")
+                    print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
+                    print("[RESULTS] That is approximately Face Matched during time ", start_time, "sec to ", end_time)
                 window.refresh()
                 window["-RES-"].update(result_output)
             else:
-                result_output= "Person was not Found!\n"        # to ipdate the results section
+                result_output= person_name+ " was not Found!\n"        # to update the results section
+                print("[RESULTS] ", person_name, " was not found in the video file")
                 window["-RES"].update(result_output)
         else:
             window.refresh()
             window["-ERR-"].update(visible=True)
-            print("Inputs are not set yet!")
+            print("[ERROR] Inputs are not set yet!")
 
 window.close()
