@@ -160,7 +160,8 @@ def launch_main_window():
         [sg.T("Select a threshold value", pad=setting_pad, font=h33)],
         [sg.Radio('0.4', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH1-"),
          sg.Radio('0.5', "RADIO1", default=True, size=(4, 1), pad=setting_pad, font=h3, key="-TH2-"),
-         sg.Radio('0.6', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH3-")],
+         sg.Radio('0.6', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH3-"),
+         sg.Radio('0.7', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH4-")],
 
         # verifying_layout
         [sg.T("Select Verifying fps", pad=setting_pad, font=h33)],
@@ -190,6 +191,7 @@ def launch_main_window():
 
         # buttons
         [sg.B("Start Processing", key='-START-', pad=setting_pad, font=h3),
+         sg.B("Exit", key='-MAINEXIT-', pad=setting_pad, font=h3),
          sg.T("Error! Inputs Can't Load", font=h3, visible=False, key="-ERR-", text_color="red")]
     ]
 
@@ -224,7 +226,7 @@ while True:             # Event Loop
 
     window, event, values = sg.read_all_windows()
     print("window object: ", window)
-    if event == sg.WIN_CLOSED or event == '-LOGEXIT-' or event == "-REGEXIT-":
+    if event == sg.WIN_CLOSED or event == '-LOGEXIT-' or event == "-REGEXIT-" or event == "-MAINEXIT-":
 
         if window == register_window:       # if closing win 2, mark as closed
             window.close()
@@ -296,7 +298,9 @@ while True:             # Event Loop
         if window["-TH3-"].get():
             window["-DFLT1-"].update("Set Threshold\t: 0.6")
             threshold= 0.6
-
+        if window["-TH4-"].get():
+            window["-DFLT1-"].update("Set Threshold\t: 0.7")
+            threshold= 0.7
         # setting fps
         if window["-FPS1-"].get():
             window["-DFLT2-"].update("Verify Frame Rate\t: 1FPS  (default)")
@@ -351,6 +355,13 @@ while True:             # Event Loop
         video_input= values["-VIDIN-"]
         window.refresh()
         if len(picture_input)>0:
+            image_extension= picture_input.rsplit(".", 1)[1]
+            # check on extension
+            if image_extension not in ["tif", "tiff", "bmp", "jpg", "jpeg", "gif", "png", "esp"]:
+                print("[ERROR] Image file extension is not known\n[ERROR] Check Image path, chose again with known image\n[ERROR] extensions instead of .%s" %image_extension)
+                window["-SPIC-"].update("Picture Error")
+                continue
+
             print("[INFO] Picture is loaded")
             window["-SPIC-"].update("Picture SELECTED")
             pic_url = picture_input.rsplit("/", 1)
@@ -360,6 +371,14 @@ while True:             # Event Loop
             print("[WARN] Picture is MISSING")
         window.refresh()
         if len(video_input)>0:
+
+            video_extension= video_input.rsplit(".", 1)[1]
+            # check on extension
+            if video_extension not in ["mp4", "MP4", "MOV", "mov", "WMV", "wmv", "FLV", "flv" , "AVI", "avi", "AVCHD", "avchd", "WebM", "webm", "MKV", "mkv"]:
+                print("[ERROR] Video file extension is not known\n[ERROR] Check Video path, chose again with known Video\n[ERROR] extensions instead of .%s" %video_extension)
+                window["-SVID-"].update("Video Error")
+                continue
+
             print("[INFO] Video is loaded")
             window["-SVID-"].update("Video SELECTED")
             # obtaining fps and setting text
