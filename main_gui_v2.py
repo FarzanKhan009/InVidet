@@ -2,15 +2,30 @@ import PySimpleGUI as sg
 
 from sys import exit
 
+import times
+from cv2 import cv2
+from moviepy.video.io.VideoFileClip import VideoFileClip
 from screeninfo import get_monitors
 # for m in get_monitors():
 #     print(str(m))
+from face_compare import compare_faces
 
 width= get_monitors()[0].width
 height= get_monitors()[0].height
 screensize=(int(width), int(height))
 print(screensize, type(screensize))
 # print("screen", get_monitors(), type(get_monitors()), get_monitors()[0].height, type(get_monitors()[0]))
+
+
+
+
+threshold, v_fps, fps, duration =0.5,1,0,0      # defaults
+v_out, v_show, video_file= False, False, True
+picture_input, video_input, person_name ="", "", "Anonymous"
+aprx_ratio= 0.75
+time = (duration * aprx_ratio) + 10
+first = 0       #to check first loop in GUI, for fetching results
+
 
 
 
@@ -37,6 +52,53 @@ sg.theme('BluePurple')
 
 
 
+
+# take seonds in seconds and return a string with format
+def get_time_format(seconds, start):
+
+    minutes,hours=0,0
+    time_string = ""
+    if seconds >= 60:    # check if it exceed 1 minut
+        minutes = int(seconds / 60)
+        seconds = int(seconds % 60)
+        if minutes >= 60:    # check if it exceed 1 hour
+            hours = int(minutes / 60)
+            minutes = int(minutes % 60)
+            if len(str(seconds))<2:     # beautifying by adding 0 in between 10:44:05
+                seconds = "0" + str(seconds)
+            if len(str(minutes))<2:     # 10:02:45
+                minutes = "0" + str(minutes)
+            if len(str(hours))<2:       # 07:55:12
+                minutes = "0" + str(minutes)
+            if start:
+                time_string = str(hours) + ":" + str(minutes) + ":" + str(seconds)
+            else:
+                time_string = str(hours) + ":" + str(minutes) + ":" + str(seconds) + " (Hours:Minutes:Seconds)"
+        else:
+            if len(str(seconds))<2:     # beautifying
+                seconds = "0" + str(seconds)
+            if len(str(minutes))<2:
+                minutes = "0" + str(minutes)
+            if start:
+                time_string = str(minutes) + ":" + str(seconds)
+            else:
+                time_string = str(minutes) + ":" + str(seconds) + " (Minutes:Seconds)"
+    else:
+        # seconds = int(seconds)
+        if seconds <10:
+            seconds = "0" + str(seconds)[0:3]
+        if start:
+            time_string = str(seconds)[0:4]
+        else:
+            time_string = str(seconds)[0:4] + " (Seconds)"
+    return time_string
+
+
+
+
+
+
+
 def launch_login_window():
     # layout =
     layout=[
@@ -54,7 +116,8 @@ def launch_register_window():
     layout = [[sg.Text('Registration', font=login_had1, pad=((5,5), (200,20)))],
               [sg.T("\nEnter 8 digit product key", font=login_had4, pad=login_pad)],
               [sg.Input(size=(32,1),key='-PRDCT-', font=login_had3, pad=login_pad)],
-              [sg.Button('OK', pad=login_pad, font=login_had4), sg.Button('Exit', font=login_had4, pad=login_pad)]]
+              [sg.Button('OK', pad=((5,20),10), font=login_had4, key="-REGOK-")],
+              [sg.Button('Login Screen', key="-BKLOGIN-", font=h3, pad=login_pad), sg.Button('Exit', key="-REGEXIT-", font=h3, pad=login_pad)]]
     in_col=[[sg.Col(layout, element_justification="l", vertical_alignment="c")]]
     return sg.Window('Second Window', in_col,location=(0,0), element_justification="c", size=screensize, finalize=True)
 
@@ -161,7 +224,7 @@ while True:             # Event Loop
 
     window, event, values = sg.read_all_windows()
     print("window object: ", window)
-    if event == sg.WIN_CLOSED or event == '-LOGEXIT-':
+    if event == sg.WIN_CLOSED or event == '-LOGEXIT-' or event == "-REGEXIT-":
 
         if window == register_window:       # if closing win 2, mark as closed
             window.close()
@@ -179,25 +242,242 @@ while True:             # Event Loop
             # exit()
         exit()
 
-    if event == 'Popup':
-        sg.popup('This is a BLOCKING popup','all windows remain inactive while popup active')
+    # taking control back to login window
+    if event == "-REGOK-":
+        login_window = launch_login_window()
+        register_window.close()
+        register_window = None
+        main_window = None
+
+
+    # taking control to Registration screen
     if event == '-REGBTN-' and not register_window and not main_window:
         register_window = launch_register_window()
+        login_window.close()
         login_window = None
         main_window = None
 
-    if event == "-LOGINBTN-" and not register_window and not main_window:
+    # taking back to login screen
+    if event == "-BKLOGIN-" and not login_window and not main_window:
+        login_window = launch_login_window()
+        register_window.close()
         register_window = None
+        main_window = None
+
+    if event == "-LOGINBTN-" and not register_window and not main_window:
         main_window = launch_main_window()
         login_window.close()
-    if event == '-IN-':
+        login_window = None
+        register_window = None
 
-        window['-OUTPUT-'].update(f'You enetered {values["-IN-"]}')
-    if event == 'Erase':
 
-        window['-OUTPUT-'].update('')
 
-        window['-IN-'].update('')
+    # handling video stream choice
+    if event == "-VIN1-":
+        video_file=False
+        print("[INFO] Video source changed to Cam Stream")
+        window["-VBRS-"].update(disabled=True)
+    if event == "-VIN2-":
+        video_file=True
+        print("[INFO] Video source changed to video file on disc")
+        window["-VBRS-"].update(disabled=False)
+
+    if event == "-SET-":
+        # setting threshold
+        # print("[INFO] Setting choices")
+        if len(window["-PRNAME-"].get()):
+            person_name= window["-PRNAME-"].get()
+        if window["-TH1-"].get():
+            window["-DFLT1-"].update("Set Threshold\t: 0.4")
+            threshold= 0.4
+        if window["-TH2-"].get():
+            window["-DFLT1-"].update("Set Threshold\t: 0.5   (default)")
+            threshold= 0.5
+        if window["-TH3-"].get():
+            window["-DFLT1-"].update("Set Threshold\t: 0.6")
+            threshold= 0.6
+
+        # setting fps
+        if window["-FPS1-"].get():
+            window["-DFLT2-"].update("Verify Frame Rate\t: 1FPS  (default)")
+            aprx_ratio= 0.75
+            time = (duration * aprx_ratio) + 10
+            window["-APRX-"].update("Estimated time to process: %s" % time)
+            v_fps= 1
+        if window["-FPS2-"].get():
+            window["-DFLT2-"].update("Verify Frame Rate\t: 2FPS")
+            aprx_ratio= 1.5
+            time = (duration * aprx_ratio) + 10
+            window["-APRX-"].update("Estimated time to process: %s" % time)
+            v_fps= 2
+        if window["-FPS3-"].get():
+            window["-DFLT2-"].update("Verify Frame Rate\t: 3FPS")
+            aprx_ratio= 2.25
+            time = (duration * aprx_ratio) + 10
+            window["-APRX-"].update("Estimated time to process: %s" % time)
+            v_fps= 3
+        if window["-FPS4-"].get():
+            window["-DFLT2-"].update("Verify Frame Rate\t: 4FPS")
+            aprx_ratio= 3
+            time= (duration* aprx_ratio)+10
+            window["-APRX-"].update("Estimated time to process: %s" %time)
+            v_fps= 4
+
+        # setting video write choice
+        if window["-VOUT1-"].get():
+            window["-DFLT3-"].update("Write Video\t: NO    (default)")
+            v_out= False
+        if window["-VOUT2-"].get():
+            window["-DFLT3-"].update("Write Video\t: YES")
+            v_out= True
+
+        if window["-VSHOW1-"].get():
+            window["-DFLT4-"].update("Show Video\t: NO    (default)")
+            v_show= False
+        if window["-VSHOW2-"].get():
+            window["-DFLT4-"].update("Show Video\t: YES")
+            v_show= True
+
+        print("\n[INFO] User choices")
+        print("[INFO] Thresholds: ", threshold)
+        print("[INFO] FPS: ", v_fps)
+        print("[INFO] Video OUT: ", v_out)
+        print("[INFO] Video SHOW: ", v_show)
+        print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10)    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
+
+
+    if event == '-LOAD-':
+        picture_input=values["-PICIN-"]
+        video_input= values["-VIDIN-"]
+        window.refresh()
+        if len(picture_input)>0:
+            print("[INFO] Picture is loaded")
+            window["-SPIC-"].update("Picture SELECTED")
+            pic_url = picture_input.rsplit("/", 1)
+            pic_url = "Picture name: %s" % pic_url[1]
+            window["-PNAME-"].update(value=str(pic_url))
+        else:
+            print("[WARN] Picture is MISSING")
+        window.refresh()
+        if len(video_input)>0:
+            print("[INFO] Video is loaded")
+            window["-SVID-"].update("Video SELECTED")
+            # obtaining fps and setting text
+
+            vid_url = video_input.rsplit("dett", 1)
+            vid_url = vid_url[1][1:]
+            # print(vid_url)
+            cam = cv2.VideoCapture(vid_url)
+            fps = cam.get(cv2.CAP_PROP_FPS)
+            clip= VideoFileClip(vid_url)
+            duration= clip.duration
+            vid_name = vid_url.rsplit("/", 1)
+            # print(vid_name, pic_url)
+            vid_name = f'{"Video name: "}{vid_name[1]}'
+            message_fps = "Video frame rate: %s" % fps
+            # print(vid_name, fps, pic_url)
+            # window.refresh()
+            window["-VNAME"].update(value=str(vid_name))
+            window["-VFPS-"].update(value=str(message_fps))
+            window["-VDUR-"].update(value= f'{"Video duration: "}{duration}{"sec"}')
+        else:
+            print("[WARN] Video is MISSING")
+        # window.refresh()
+
+        if len(picture_input)>0 and len(video_input)>0:
+            print("[INFO] Inputs are loaded successfully")
+            window["-ERR-"].update(visible=False)
+            window.refresh()
+
+        # threshold= window["TH1"].get()
+        # print(threshold, type(threshold))
+    if event == "-START-":
+        if len(picture_input)<1:
+            print("[ERROR] Picture is not loaded yet")
+            window["-ERR-"].update(visible=True)
+            continue
+        else:
+            window["-ERR-"].update(visible=False)
+
+        if video_file and len(video_input)<1:
+            print("[ERROR] Video is not loaded yet")
+            window["-ERR-"].update(visible=True)
+            continue
+        else:
+            window["-ERR-"].update(visible=False)
+
+        window.refresh()
+
+
+        if len(picture_input)>0 and (len(video_input)>0 or video_file==False):
+            if first>0:
+                window["-RES-"].update("Fetching new results")
+                print("[INFO] Fetching results for the ", first, " time")
+                first+= 1
+            else:
+                first += 1
+                print("[INFO] Fetching results for the ", first, " time")
+            print("[INFO] Starting process!")
+            print("[INFO] 10s delay on loading TensorFlow")
+
+            # to monitor how much time it took
+            process_start = times.now()
+            track_records= compare_faces(picture_input, video_input, fps, threshold, v_fps, person_name, v_out, v_show, video_file)
+            # track_records= compare_faces(picture_input, video_input)
+            process_elapsed_time = times.now() - process_start
+            if len(track_records) >0:
+                print("[INFO] Person found in the video file")
+                print("[INFO] Process took", process_elapsed_time, "to complete")
+                result_output_0= "Person FOUND!\t Elapsed Time "+ str(process_elapsed_time)[0:10]  +"\n\n"      # to update the results section
+                result_output_1=""
+                find=1      #to serialize results
+
+                # initializing to use at out side the loop
+                start_time, end_time= "", ""
+
+                # looping results list which returned from face_compare
+                for frames in track_records:
+                    current_index= track_records.index(frames)
+                    if current_index % 2 ==0:
+                        last_frame= track_records[current_index+1]
+                        # for HH:MM:SS time format
+                        if not video_file:
+                            fps=30
+                        start_time = get_time_format((frames/fps), True)
+                        end_time= get_time_format((last_frame/fps), False)
+
+
+                        result_output_1 = result_output_1 + str(find) + ". " +person_name+ " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                        print("\n[RESULTS]", person_name, "was found:")
+                        print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
+                        print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time, "sec to ", end_time)
+                        find+=1
+                find+= 1
+
+                # to handle remaining last time
+                if len(track_records) % 2 != 0:
+                    if len(track_records)==1:
+                        if str(track_records[0]) =="ERROR":
+                            print("[ERROR] Fatal exception raised!\n[ERROR] Video cant be loaded")
+                            window["-RES-"].update("Exception RAISED, Video Can't Load!\nCheck Video Path again")
+                            break
+
+                    frames = track_records[len(track_records) - 2]
+                    last_frame = track_records[len(track_records) - 1]
+
+                    start_time = get_time_format((frames / fps), True)
+                    end_time = get_time_format((last_frame / fps), False)
+
+                    result_output_1 = result_output_1 + str(find) + ". " + person_name + " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                    print("\n[RESULTS]", person_name, "was found:")
+                    print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
+                    print("[RESULTS] That is approximately Face Matched during time \n[RESULTS]", start_time, "sec to ", end_time)
+                window.refresh()
+                window["-RES-"].update(result_output_0+result_output_1)
+            else:
+                result_output= person_name+ " was not Found!\tElapsed Time "+str(process_elapsed_time)[0:10]     # to update the results section
+                print("[RESULTS] ", person_name, " was not found in the video file")
+                window["-RES-"].update(result_output)
 
 
 window.close()
