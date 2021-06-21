@@ -29,7 +29,7 @@ v_out, v_show, video_file= False, False, True
 aprx_ratio= 0.75
 time = (duration * aprx_ratio) + 10
 first = 0       #to check first loop in GUI, for fetching results
-
+video_source_changing=0
 
 
 
@@ -137,10 +137,10 @@ def launch_main_window():
         [sg.T("Inputs", font=h2, pad=inputs_pad_standard, size= general_size)],
         [sg.T('Select Picture', pad=inputs_pad_standard, key="-SPIC-", size=(20, 1), font=h33),
          sg.In(key='-PICIN-', pad=inputs_pad_standard, visible=False),
-         sg.FilesBrowse(target='-PICIN-', pad=inputs_pad_standard)],
+         sg.FilesBrowse(target='-PICIN-', pad=inputs_pad_standard, key="-PBRS-", )],
         [sg.T('Select Video', pad=inputs_pad_standard, key="-SVID-", size=(20, 1), font=h33),
          sg.In(key='-VIDIN-', pad=inputs_pad_standard, visible=False),
-         sg.FilesBrowse(target='-VIDIN-', pad=((5, 5), (2, 15)), disabled=False, key="-VBRS-")],
+         sg.FilesBrowse(target='-VIDIN-', pad=((5, 5), (2, 15)), disabled=False, key="-VBRS-", )],
 
         # input_details_layout
         [sg.T("Details on input", pad=setting_pad, font=h33, size=(24, 1))],
@@ -158,31 +158,31 @@ def launch_main_window():
         # person_name_layout
         [sg.HSeparator()],
         [sg.T("Setting", font=h2, pad=setting_pad)],
-        [sg.Text("Person name if known? (optional)", pad=setting_pad, font=h33)],
-        [sg.Input(key="-PRNAME-", size=(16, 1), pad=setting_pad, font=h3)],
+        [sg.Text("Person name if known? (optional)", pad=setting_pad, font=h33) ],
+        [sg.Input(key="-PRNAME-", size=(16, 1), pad=setting_pad, font=h3, enable_events=True)],
 
         # threshold_layout
         [sg.T("Select a threshold value", pad=setting_pad, font=h33)],
-        [sg.Radio('0.4', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH1-"),
-         sg.Radio('0.5', "RADIO1", default=True, size=(4, 1), pad=setting_pad, font=h3, key="-TH2-"),
-         sg.Radio('0.6', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH3-"),
-         sg.Radio('0.7', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH4-")],
+        [sg.Radio('0.4', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH1-", enable_events=True),
+         sg.Radio('0.5', "RADIO1", default=True, size=(4, 1), pad=setting_pad, font=h3, key="-TH2-", enable_events=True),
+         sg.Radio('0.6', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH3-", enable_events=True),
+         sg.Radio('0.7', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH4-", enable_events=True)],
 
         # verifying_layout
         [sg.T("Select Verifying fps", pad=setting_pad, font=h33)],
-        [sg.Radio("V1FPS", "RADIO2", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-FPS1-"),
-         sg.Radio("V2FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS2-")],
-        [sg.Radio("V3FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS3-"),
-         sg.Radio("V4FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS4-")],
+        [sg.Radio("V1FPS", "RADIO2", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-FPS1-", enable_events=True),
+         sg.Radio("V2FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS2-", enable_events=True)],
+        [sg.Radio("V3FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS3-", enable_events=True),
+         sg.Radio("V4FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS4-", enable_events=True)],
 
         # write_video_layout
         [sg.T("Output a video file?", pad=setting_pad, font=h33)],
-        [sg.Radio("No", "RADIO3", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-VOUT1-"),
-         sg.Radio("Yes", "RADIO3", font=h3, pad=setting_pad, size=(6, 1), key="-VOUT2-")],
+        [sg.Radio("No", "RADIO3", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-VOUT1-", enable_events=True),
+         sg.Radio("Yes", "RADIO3", font=h3, pad=setting_pad, size=(6, 1), key="-VOUT2-", enable_events=True)],
         [sg.T("Display video??", pad=setting_pad, font=h33)],
-        [sg.Radio("No", "RADIO4", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-VSHOW1-"),
-         sg.Radio("Yes", "RADIO4", font=h3, pad=setting_pad, size=(6, 1), key="-VSHOW2-")],
-        [sg.B("SET", key='-SET-', pad=setting_pad)],
+        [sg.Radio("No", "RADIO4", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-VSHOW1-", enable_events=True),
+         sg.Radio("Yes", "RADIO4", font=h3, pad=setting_pad, size=(6, 1), key="-VSHOW2-", enable_events=True)],
+        # [sg.B("SET", key='-SET-', pad=setting_pad)],
 
         # horisotal
         [sg.HSeparator()],
@@ -195,7 +195,7 @@ def launch_main_window():
         [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(28, 1))],
 
         # buttons
-        [sg.B("Start Processing", key='-START-', pad=setting_pad, font=h3),
+        [sg.B("Start Processing", key='-START-', pad=setting_pad, font=h3, disabled=True),
          sg.B("Exit", key='-MAINEXIT-', pad=setting_pad, font=h3),
          sg.T("Error! Inputs Can't Load", font=h3, visible=False, key="-ERR-", text_color="red")]
     ]
@@ -231,7 +231,7 @@ login_window, register_window, main_window = launch_login_window(), None, None  
 while True:             # Event Loop
 
     window, event, values = sg.read_all_windows()
-    print("window object: ", window)
+    # print("window object: ", window)
     if event == sg.WIN_CLOSED or event in ["-LOGEXIT-" ,"-REGEXIT-", "-MAINEXIT-"]:
 
         if window == register_window:       # if closing win 2, mark as closed
@@ -282,80 +282,162 @@ while True:             # Event Loop
 
     # handling video stream choice
     if event == "-VIN1-":
+        # emptying video variable as well as video input sources when it clicked second time, coming back from cam stream
+        video_input=""
+        window["-VIDIN-"].update("")
         video_file=False
         print("[INFO] Video source changed to Cam Stream")
+        window["-SVID-"].update("Select Video")
+        window["-VNAME"].update(value="Video name: ")
+        window["-VFPS-"].update(value="Video frame rate:" )
+        window["-VDUR-"].update(value="Video duration: ")
         window["-VBRS-"].update(disabled=True)
+        video_source_changing=1
+        if not video_file and len(picture_input)>0:
+            window["-START-"].update(disabled=False)        # if cam stream it should be abled to perform
     if event == "-VIN2-":
+        if video_source_changing == 0:
+            continue        # doing it so that it not monitor every click only monitor if once clicked to cam stream
+
+        if video_input == "":
+            window["-START-"].update(disabled= True)    # it became disabled again if no source video
         video_file=True
         print("[INFO] Video source changed to video file on disc")
         window["-VBRS-"].update(disabled=False)
+        video_source_changing=0
 
-    if event == "-SET-":
-        # setting threshold
-        # print("[INFO] Setting choices")
-        if len(window["-PRNAME-"].get()):
-            person_name= window["-PRNAME-"].get()
-        if window["-TH1-"].get():
-            window["-DFLT1-"].update("Set Threshold\t: 0.4")
-            threshold= 0.4
-        if window["-TH2-"].get():
-            window["-DFLT1-"].update("Set Threshold\t: 0.5   (default)")
-            threshold= 0.5
-        if window["-TH3-"].get():
-            window["-DFLT1-"].update("Set Threshold\t: 0.6")
-            threshold= 0.6
-        if window["-TH4-"].get():
-            window["-DFLT1-"].update("Set Threshold\t: 0.7")
-            threshold= 0.7
-        # setting fps
-        if window["-FPS1-"].get():
-            window["-DFLT2-"].update("Verify Frame Rate\t: 1FPS  (default)")
-            aprx_ratio= 0.75
-            time = (duration * aprx_ratio) + 10
-            window["-APRX-"].update("Estimated time to process: %s" % time)
-            v_fps= 1
-        if window["-FPS2-"].get():
-            window["-DFLT2-"].update("Verify Frame Rate\t: 2FPS")
-            aprx_ratio= 1.5
-            time = (duration * aprx_ratio) + 10
-            window["-APRX-"].update("Estimated time to process: %s" % time)
-            v_fps= 2
-        if window["-FPS3-"].get():
-            window["-DFLT2-"].update("Verify Frame Rate\t: 3FPS")
-            aprx_ratio= 2.25
-            time = (duration * aprx_ratio) + 10
-            window["-APRX-"].update("Estimated time to process: %s" % time)
-            v_fps= 3
-        if window["-FPS4-"].get():
-            window["-DFLT2-"].update("Verify Frame Rate\t: 4FPS")
-            aprx_ratio= 3
-            time= (duration* aprx_ratio)+10
-            window["-APRX-"].update("Estimated time to process: %s" %time)
-            v_fps= 4
 
-        # setting video write choice
-        if window["-VOUT1-"].get():
-            window["-DFLT3-"].update("Write Video\t: NO    (default)")
-            v_out= False
-        if window["-VOUT2-"].get():
-            window["-DFLT3-"].update("Write Video\t: YES")
-            v_out= True
 
-        if window["-VSHOW1-"].get():
-            window["-DFLT4-"].update("Show Video\t: NO    (default)")
-            v_show= False
-        if window["-VSHOW2-"].get():
-            window["-DFLT4-"].update("Show Video\t: YES")
-            v_show= True
-
-        print("\n[INFO] User choices")
+    if event== "-TH1-":
+        window["-DFLT1-"].update("Set Threshold\t: 0.4")
+        threshold = 0.4
         print("[INFO] Thresholds: ", threshold)
+    if event == "-TH2-":
+        window["-DFLT1-"].update("Set Threshold\t: 0.5   (default)")
+        threshold = 0.5
+        print("[INFO] Thresholds: ", threshold)
+
+    if event == "-TH3-":
+        window["-DFLT1-"].update("Set Threshold\t: 0.6")
+        threshold = 0.6
+        print("[INFO] Thresholds: ", threshold)
+    if event == "-TH4-":
+        window["-DFLT1-"].update("Set Threshold\t: 0.7")
+        threshold = 0.7
+        print("[INFO] Thresholds: ", threshold)
+
+
+    # setting vfps
+    if event == "-FPS1-":
+        window["-DFLT2-"].update("Verify Frame Rate\t: 1FPS  (default)")
+        aprx_ratio = 0.75
+        time_s = (duration * aprx_ratio) + 10
+        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        if time>60:
+            time_m = time_s/60
+            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+            if time_m >60:
+                time_h= time_m/60
+                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        v_fps = 1
         print("[INFO] FPS: ", v_fps)
+        print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
+
+    if event == "-FPS2-":
+        window["-DFLT2-"].update("Verify Frame Rate\t: 2FPS")
+        aprx_ratio = 1.5
+        time_s = (duration * aprx_ratio) + 10
+        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        if time_s>60:
+            time_m = time_s / 60
+            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+            if time_m > 60:
+                time_h = time_m / 60
+                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        v_fps = 2
+        print("[INFO] FPS: ", v_fps)
+        print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
+
+
+    if event == "-FPS3-":
+        window["-DFLT2-"].update("Verify Frame Rate\t: 3FPS")
+        aprx_ratio = 2.25
+        time_s = (duration * aprx_ratio) + 10
+        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        if time_s>60:
+            time_m = time_s / 60
+            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+            if time_m > 60:
+                time_h = time_m / 60
+                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        v_fps = 3
+        print("[INFO] FPS: ", v_fps)
+        print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
+
+
+    if event == "-FPS4-":
+        window["-DFLT2-"].update("Verify Frame Rate\t: 4FPS")
+        aprx_ratio = 3
+        time_s = (duration * aprx_ratio) + 10
+        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        if time_s>60:
+            time_m = time_s / 60
+            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+            if time_m > 60:
+                time_h = time_m / 60
+                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        v_fps = 4
+        print("[INFO] FPS: ", v_fps)
+        print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
+
+
+
+    # setting video write option
+    if event == "-VOUT1-":
+        window["-DFLT3-"].update("Write Video\t: NO    (default)")
+        v_out = False
         print("[INFO] Video OUT: ", v_out)
+
+    if event == "-VOUT2-":
+        window["-DFLT3-"].update("Write Video\t: YES")
+        v_out = True
+        print("[INFO] Video OUT: ", v_out)
+
+
+    # setting Video show option
+    if event == "-VSHOW1-":
+        window["-DFLT4-"].update("Show Video\t: NO    (default)")
+        v_show = False
         print("[INFO] Video SHOW: ", v_show)
-        print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10)    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
+
+    if event == "-VSHOW2-":
+        window["-DFLT4-"].update("Show Video\t: YES")
+        v_show = True
+        print("[INFO] Video SHOW: ", v_show)
+        time_s = (duration * aprx_ratio * 1.05) + 10        # 1.05 approximately delay ratio for showing vs not showing
+        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        if time_s > 60:
+            time_m = time_s / 60
+            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+            if time_m > 60:
+                time_h = time_m / 60
+                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+
+    # setting person name
+    if event == "-PRNAME-":
+        person_name= window["-PRNAME-"].get()
+        print("\n[INFO] Person name changed")
 
 
+
+
+
+
+    #
+    # if event == "-PBRS-":
+    #     window.refresh()
+    #     print(window["-PICIN-"].get())
+    #     window.refresh()
     if event == '-LOAD-':
         picture_input=values["-PICIN-"]
         video_input= values["-VIDIN-"]
@@ -385,6 +467,8 @@ while True:             # Event Loop
                 window["-SVID-"].update("Video Error")
                 continue
 
+
+
             print("[INFO] Video is loaded")
             window["-SVID-"].update("Video SELECTED")
             # obtaining fps and setting text
@@ -396,6 +480,16 @@ while True:             # Event Loop
             fps = cam.get(cv2.CAP_PROP_FPS)
             clip= VideoFileClip(vid_url)
             duration= clip.duration
+            # getting/setting estimated duration
+            time_s = (duration * aprx_ratio) + 10
+            window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+            if time_s > 60:
+                time_m = time_s / 60
+                window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+                if time_m > 60:
+                    time_h = time_m / 60
+                    window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+
             vid_name = vid_url.rsplit("/", 1)
             # print(vid_name, pic_url)
             vid_name = f'{"Video name: "}{vid_name[1]}'
@@ -406,13 +500,24 @@ while True:             # Event Loop
             window["-VFPS-"].update(value=str(message_fps))
             window["-VDUR-"].update(value= f'{"Video duration: "}{duration}{"sec"}')
         else:
-            print("[WARN] Video is MISSING")
+            # start button back to disabled if video input missing
+            if video_file:
+                window["-START-"].update(disabled= True)
+                print("[WARN] Video is MISSING")
         # window.refresh()
 
         if len(picture_input)>0 and len(video_input)>0:
             print("[INFO] Inputs are loaded successfully")
+            window["-START-"].update(disabled= False)
             window["-ERR-"].update(visible=False)
             window.refresh()
+        if not video_file and len(picture_input)>0:
+            print("[INFO] Inputs are loaded successfully")
+            window["-START-"].update(disabled=False)
+            window["-ERR-"].update(visible=False)
+            window.refresh()
+
+
 
         # threshold= window["TH1"].get()
         # print(threshold, type(threshold))
@@ -527,6 +632,7 @@ while True:             # Event Loop
                 result_output= person_name+ " was not Found!\tElapsed Time "+str(process_elapsed_time)[0:10]     # to update the results section
                 print("[RESULTS] ", person_name, " was not found in the video file")
                 window["-RES-"].update(result_output)
+    # window.refresh()
 
 
 window.close()
