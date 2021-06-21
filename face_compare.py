@@ -3,6 +3,7 @@
 # on RAM also no need to store them in directory as Images or npz files
 import matplotlib.pyplot as plt
 import numpy as np
+import times
 from PIL import Image
 from PIL.Image import fromarray
 from cv2 import cv2
@@ -85,12 +86,17 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     # initializing list() to track frames
     tracked_list = list()
     # making sure video is readable
-
+    width= 640
+    height= 480
+    # size = tuple((640,480))
     if video_file:
         try:
             vid_url = vid_url.rsplit("InVidett", 1)
             vid_url = vid_url[1][1:]
             cap = cv2.VideoCapture(vid_url)
+            width = int(cap.get(3))
+            height = int(cap.get(4))
+            fps = int(cap.get(5))
             print("[INFO] Video file is successfully loaded")
 
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -113,7 +119,9 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     if v_out:
         print("[INFO] Video write option is set TRUE, initializing")
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter('pic_input/output.avi', fourcc, v_fps, (640, 480))
+        # if video_file:
+            # size= tuple((width, height))
+        out = cv2.VideoWriter('pic_input/output.avi', fourcc, v_fps, (width,height))      #(640, 480))
         print("[INFO] Output video path is set to pic_input/output.avi")
 
     # initializing frame counts
@@ -212,12 +220,30 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
                     match += 1
 
                     # only show frames or video if it set true
-                    if v_show:
-                        text = "["+person_name+"]" + " , [DISTANCE] " + str(distance)[0:4]
+                    if v_show or v_out:
+                        message1="[Current Frame: "+str(countframes)+"/"+str(total_frames)+"]"
+                        message3 = "["+person_name+"]" + " , [DISTANCE: " + str(distance)[0:4]+"]"
+                        sec= countframes/fps
+                        if sec>60:
+                            min= sec/60
+                            message2="[Aprx Time: "+str(int(min))+" min]"      #internal int so that no float values long string in show
+                            if min >60:
+                                hr= min/60
+                                message2 = "[Aprx Time: " + str(int(hr)) + " hr]"  # internal int so that no float values long string in show
+                        message2 = "[Aprx Time: " + str(int(sec)) + " sec]"  # internal int so that no float values long string in show
+
+                        if not video_file:
+                            current_time= times.now()
+                            message2= "[Live Time: "+str(current_time)[11:19]+"]"
+                            message1= "[     Date: "+str(current_time)[0:10]+"]"
                         # "y" show name upper side of bounding box if there is space if no space left show towards donside
-                        y = y1 - 10 if y1 - 10 > 10 else y1 + 10
+                        ms3 = y1 - 10 if y1 - 10 > 10 else y1 + 10
+                        ms2 = y1 - 25 if y1 - 25 > 25 else y1 + 25
+                        ms1 = y1 - 40 if y1 - 40 > 40 else y1 + 40
                         cv2.rectangle(frame_array, (x1, y1), (x2, y2), (155, 25, 25), 2)
-                        cv2.putText(frame_array, text, (x1, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (155, 25, 25), 2)
+                        cv2.putText(frame_array, message1, (x1, ms1), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (155, 25, 25), 2)
+                        cv2.putText(frame_array, message2, (x1, ms2), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (155, 25, 25), 2)
+                        cv2.putText(frame_array, message3, (x1, ms3), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (155, 25, 25), 2)
 
 
                     # marking first frame
@@ -272,9 +298,9 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
         if v_out:
             print("[INFO] Writing frame ", countframes, "/", total_frames, " in output video")
             out.write(frame_array[:, :, ::-1])
-            # cv2.waitKey(1)
             # if cv2.waitKey(0) & 0xFF == ord('q'):
             #     break
+            # cv2.waitKey(1)
 
         # only show if it sets true
         if v_show:
@@ -282,7 +308,7 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
             cv2.imshow("InVidet", frame_array[:, :, ::-1])
             # ideal is waitkey(0), but (1) is working for me
             # cv2.waitKey(1)
-            if cv2.waitKey(5) & 0xFF == ord('q'):
+            if cv2.waitKey(2) & 0xFF == ord('q'):
                 break
 
     # for last verified  frame, if it is not tracked

@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 import PySimpleGUI as sg
 
 from sys import exit
@@ -10,18 +13,19 @@ from screeninfo import get_monitors
 #     print(str(m))
 from face_compare import compare_faces
 
+output_logs, final_results="", ""       #initializing to store outputlogs and results later save as text file
 width= get_monitors()[0].width
 height= get_monitors()[0].height
 screensize=(int(width), int(height))
-print(screensize, type(screensize))
+print("[INFO] Reading screen size\n[INFO] size set to: ", screensize, "Type of: ", type(screensize))
 # print("screen", get_monitors(), type(get_monitors()), get_monitors()[0].height, type(get_monitors()[0]))
 
 
 
 
+picture_input, video_input, person_name ="", "", "Anonymous"
 threshold, v_fps, fps, duration =0.5,1,0,0      # defaults
 v_out, v_show, video_file= False, False, True
-picture_input, video_input, person_name ="", "", "Anonymous"
 aprx_ratio= 0.75
 time = (duration * aprx_ratio) + 10
 first = 0       #to check first loop in GUI, for fetching results
@@ -33,6 +37,7 @@ first = 0       #to check first loop in GUI, for fetching results
 general_size= (int(width/90), 1)
 output_height=int(height/18)
 output_width=int(width/3)
+result_height=int(height/25)
 
 inputs_pad_standard= ((5,5),2)
 setting_pad= ((5,5), (1,1))
@@ -110,7 +115,7 @@ def launch_login_window():
          [sg.Button("Register Now", key='-REGBTN-', font=h3, pad=login_pad), sg.Button('Exit', key="-LOGEXIT-", font=h3)]
     ]
     in_col=[[sg.Column(layout, element_justification="l", vertical_alignment="center")]]
-    return sg.Window('Login Window', in_col, location=(0,0), element_justification="c", size=screensize, finalize=True)
+    return sg.Window('Login - InViDet', in_col, location=(0,0), element_justification="c", size=screensize, finalize=True)
 
 def launch_register_window():
     layout = [[sg.Text('Registration', font=login_had1, pad=((5,5), (200,20)))],
@@ -119,7 +124,7 @@ def launch_register_window():
               [sg.Button('OK', pad=((5,20),10), font=login_had4, key="-REGOK-")],
               [sg.Button('Login Screen', key="-BKLOGIN-", font=h3, pad=login_pad), sg.Button('Exit', key="-REGEXIT-", font=h3, pad=login_pad)]]
     in_col=[[sg.Col(layout, element_justification="l", vertical_alignment="c")]]
-    return sg.Window('Second Window', in_col,location=(0,0), element_justification="c", size=screensize, finalize=True)
+    return sg.Window('Register - InViDet', in_col,location=(0,0), element_justification="c", size=screensize, finalize=True)
 
 def launch_main_window():
 
@@ -202,7 +207,8 @@ def launch_main_window():
     mid_column = [
         [sg.T("Final Results", font=h2, pad=inputs_pad_standard)],
         [sg.T("Time Elapsed: ", visible=False, font=h3, key="-TIME-")],
-        [sg.T("Results", key="-RES-", size=(output_width,output_height), font=h3)],
+        [sg.T("Results", key="-RES-", size=(output_width,result_height), font=h3)],
+        [sg.B("Show Results", key="-SHOW-", font=h3)]
         # [sg.HSeparator()]
     ]
 
@@ -226,7 +232,7 @@ while True:             # Event Loop
 
     window, event, values = sg.read_all_windows()
     print("window object: ", window)
-    if event == sg.WIN_CLOSED or event == '-LOGEXIT-' or event == "-REGEXIT-" or event == "-MAINEXIT-":
+    if event == sg.WIN_CLOSED or event in ["-LOGEXIT-" ,"-REGEXIT-", "-MAINEXIT-"]:
 
         if window == register_window:       # if closing win 2, mark as closed
             window.close()
@@ -410,6 +416,14 @@ while True:             # Event Loop
 
         # threshold= window["TH1"].get()
         # print(threshold, type(threshold))
+
+    # opening result text file in default editor
+    if event == "-SHOW-":
+        # OS dependent for windows use OS library
+        # os.system("Final_Results_Invidet.txt")
+        subprocess.call(["xdg-open", "Final_Results_Invidet.txt"])
+
+
     if event == "-START-":
         if len(picture_input)<1:
             print("[ERROR] Picture is not loaded yet")
@@ -449,12 +463,15 @@ while True:             # Event Loop
                 print("[INFO] Process took", process_elapsed_time, "to complete")
                 result_output_0= "Person FOUND!\t Elapsed Time "+ str(process_elapsed_time)[0:10]  +"\n\n"      # to update the results section
                 result_output_1=""
+                result_output_2=""
+                result_output_3=""
                 find=1      #to serialize results
 
                 # initializing to use at out side the loop
                 start_time, end_time= "", ""
 
                 # looping results list which returned from face_compare
+                total_results= 0
                 for frames in track_records:
                     current_index= track_records.index(frames)
                     if current_index % 2 ==0:
@@ -464,13 +481,22 @@ while True:             # Event Loop
                             fps=30
                         start_time = get_time_format((frames/fps), True)
                         end_time= get_time_format((last_frame/fps), False)
+                        if total_results >= 15:
+                            result_output_2= "\nOnly showing first 15 results; All results are stored\nin Final_Results_Invidet.txt"
+                            result_output_3 = result_output_3 + str(find) + ". " + person_name + " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                            print("\n[RESULTS]", person_name, "was found:")
+                            print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
+                            print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time,
+                                  "sec to ", end_time)
+                            find += 1
+                        else:
+                            total_results += 1
 
-
-                        result_output_1 = result_output_1 + str(find) + ". " +person_name+ " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
-                        print("\n[RESULTS]", person_name, "was found:")
-                        print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
-                        print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time, "sec to ", end_time)
-                        find+=1
+                            result_output_1 = result_output_1 + str(find) + ". " +person_name+ " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                            print("\n[RESULTS]", person_name, "was found:")
+                            print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
+                            print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time, "sec to ", end_time)
+                            find+=1
                 find+= 1
 
                 # to handle remaining last time
@@ -492,7 +518,11 @@ while True:             # Event Loop
                     print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
                     print("[RESULTS] That is approximately Face Matched during time \n[RESULTS]", start_time, "sec to ", end_time)
                 window.refresh()
-                window["-RES-"].update(result_output_0+result_output_1)
+                window["-RES-"].update(result_output_0+result_output_1+result_output_2)
+                result_text_file= open("Final_Results_Invidet.txt", "w")
+                result_text_file.truncate(0)
+                result_text_file.write(result_output_0+result_output_1+result_output_3)
+                result_text_file.close()
             else:
                 result_output= person_name+ " was not Found!\tElapsed Time "+str(process_elapsed_time)[0:10]     # to update the results section
                 print("[RESULTS] ", person_name, " was not found in the video file")
