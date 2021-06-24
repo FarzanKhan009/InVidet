@@ -24,7 +24,7 @@ print("[INFO] Reading screen size\n[INFO] size set to: ", screensize, "Type of: 
 
 
 picture_input, video_input, person_name ="", "", "Anonymous"
-threshold, v_fps, fps, duration =0.5,1,0,0      # defaults
+threshold, v_fps, fps, frame_count, duration =0.5,1,0,0,0      # defaults
 v_out, v_show, video_file= False, False, True
 aprx_ratio= 0.75
 time = (duration * aprx_ratio) + 10
@@ -45,13 +45,13 @@ login_pad= (5,10)
 login_had1= "Akira 30"
 login_had2= "Akira 25"
 login_had3= "Akira 20"
-login_had4= "Akira 15"
+login_had4= "Akira 14"
 h1= "Akira 30"
 h2= "Akira 25"
 h3= "Akira 10"
 h33= "Akira 15"
 # theme
-sg.theme('BluePurple')
+sg.theme('technology4')
 
 
 
@@ -110,9 +110,9 @@ def launch_login_window():
          [sg.Text('Login', font=login_had1, pad=((5,5),(200,20)))],
          [sg.Text('User Name: ', font=login_had3, pad=login_pad, size=(16, 1)), sg.In(font=login_had3, size=(16,1))],
          [sg.Text('Password: ', font=login_had3, size=(16, 1), pad=login_pad), sg.In(password_char="*", size= (16,1), font=login_had3)],
-         [sg.Button('Login', key="-LOGINBTN-", pad=login_pad)],
+         [sg.Button('Login', key="-LOGINBTN-", pad=login_pad, font=login_had4), sg.Button('Forget Password', key="-FORGET-", pad=login_pad, font=login_had4)],
          [sg.T("\n\n\n\nNot Registered?", font=h2, pad=login_pad)],
-         [sg.Button("Register Now", key='-REGBTN-', font=h3, pad=login_pad), sg.Button('Exit', key="-LOGEXIT-", font=h3)]
+         [sg.Button("Register Now", key='-REGBTN-', font=login_had4, pad=login_pad), sg.Button('Exit', key="-LOGEXIT-", font=login_had4)]
     ]
     in_col=[[sg.Column(layout, element_justification="l", vertical_alignment="center")]]
     return sg.Window('Login - InViDet', in_col, location=(0,0), element_justification="c", size=screensize, finalize=True)
@@ -121,8 +121,11 @@ def launch_register_window():
     layout = [[sg.Text('Registration', font=login_had1, pad=((5,5), (200,20)))],
               [sg.T("\nEnter 8 digit product key", font=login_had4, pad=login_pad)],
               [sg.Input(size=(32,1),key='-PRDCT-', font=login_had3, pad=login_pad)],
-              [sg.Button('OK', pad=((5,20),10), font=login_had4, key="-REGOK-")],
-              [sg.Button('Login Screen', key="-BKLOGIN-", font=h3, pad=login_pad), sg.Button('Exit', key="-REGEXIT-", font=h3, pad=login_pad)]]
+              [sg.Button('Verify', pad=((5, 20), 10), font=login_had4, key="-VERIFY-")],
+              [sg.T("User Name", font=login_had3, size=(10,1)), sg.Input(size=(16,1),key='-SETUSERNAME-', font=login_had3, pad=login_pad)],
+              [sg.T("Password", font=login_had3, size=(10,1)), sg.Input(size=(16,1),key='-SETPASS-', font=login_had3, pad=login_pad)],
+              [sg.Button('Register', pad=((5,20),10), font=login_had4, key="-REGOK-")],
+              [sg.Button('Login Now', key="-BKLOGIN-", font=login_had4, pad=login_pad), sg.Button('Exit', key="-REGEXIT-", font=login_had4, pad=login_pad)]]
     in_col=[[sg.Col(layout, element_justification="l", vertical_alignment="c")]]
     return sg.Window('Register - InViDet', in_col,location=(0,0), element_justification="c", size=screensize, finalize=True)
 
@@ -158,44 +161,50 @@ def launch_main_window():
         # person_name_layout
         [sg.HSeparator()],
         [sg.T("Setting", font=h2, pad=setting_pad)],
-        [sg.Text("Person name if known? (optional)", pad=setting_pad, font=h33) ],
-        [sg.Input(key="-PRNAME-", size=(16, 1), pad=setting_pad, font=h3, enable_events=True)],
+        [sg.Text("Person Name", pad=setting_pad, font=h33), sg.Input(key="-PRNAME-", size=(10, 1), pad=setting_pad, font=h33, enable_events=True), sg.Text("(Optional)", pad=setting_pad, font=h3) ],
+        # [sg.Input(key="-PRNAME-", size=(16, 1), pad=setting_pad, font=h3, enable_events=True)],
 
         # threshold_layout
-        [sg.T("Select a threshold value", pad=setting_pad, font=h33)],
+        [sg.T("Threshold", pad=setting_pad, font=h33)],
         [sg.Radio('0.4', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH1-", enable_events=True),
          sg.Radio('0.5', "RADIO1", default=True, size=(4, 1), pad=setting_pad, font=h3, key="-TH2-", enable_events=True),
          sg.Radio('0.6', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH3-", enable_events=True),
          sg.Radio('0.7', "RADIO1", size=(4, 1), pad=setting_pad, font=h3, key="-TH4-", enable_events=True)],
 
         # verifying_layout
-        [sg.T("Select Verifying fps", pad=setting_pad, font=h33)],
+        [sg.T("Verifying Rate", pad=setting_pad, font=h33)],
         [sg.Radio("V1FPS", "RADIO2", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-FPS1-", enable_events=True),
          sg.Radio("V2FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS2-", enable_events=True)],
         [sg.Radio("V3FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS3-", enable_events=True),
          sg.Radio("V4FPS", "RADIO2", font=h3, pad=setting_pad, size=(6, 1), key="-FPS4-", enable_events=True)],
 
         # write_video_layout
-        [sg.T("Output a video file?", pad=setting_pad, font=h33)],
+        [sg.T("Video Out", pad=setting_pad, font=h33)],
         [sg.Radio("No", "RADIO3", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-VOUT1-", enable_events=True),
          sg.Radio("Yes", "RADIO3", font=h3, pad=setting_pad, size=(6, 1), key="-VOUT2-", enable_events=True)],
-        [sg.T("Display video??", pad=setting_pad, font=h33)],
+        [sg.T("Video Display", pad=setting_pad, font=h33)],
         [sg.Radio("No", "RADIO4", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-VSHOW1-", enable_events=True),
          sg.Radio("Yes", "RADIO4", font=h3, pad=setting_pad, size=(6, 1), key="-VSHOW2-", enable_events=True)],
         # [sg.B("SET", key='-SET-', pad=setting_pad)],
 
+        # alarm
+        [sg.T("Alarm On Recognition", pad=setting_pad, font=h33)],
+        [sg.Radio("OFF", "RADIO6", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-ALARM1-", enable_events=True),
+         sg.Radio("ON", "RADIO6", font=h3, pad=setting_pad, size=(6, 1), key="-ALARM2-", enable_events=True)],
+
         # horisotal
         [sg.HSeparator()],
         # set_choice_layout
-        [sg.T("Set Threshold\t: 0.5   (default)", pad=setting_pad, font=h3, key="-DFLT1-", size=(30, 1))],
-        [sg.T("Verify Frame Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
-        [sg.T("Write Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
-        [sg.T("Display Video\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT4-", size=(30, 1))],
+        [sg.T("Threshold\t: 0.5   (default)", pad=setting_pad, font=h3, key="-DFLT1-", size=(30, 1))],
+        [sg.T("Verify Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
+        [sg.T("Video Out\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
+        [sg.T("Video Display\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT4-", size=(30, 1))],
         # aprx time to process
         [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(28, 1))],
 
         # buttons
         [sg.B("Start Processing", key='-START-', pad=setting_pad, font=h3, disabled=True),
+         sg.B("Logout", key='-LOGOUT-', pad=setting_pad, font=h3),
          sg.B("Exit", key='-MAINEXIT-', pad=setting_pad, font=h3),
          sg.T("Error! Inputs Can't Load", font=h3, visible=False, key="-ERR-", text_color="red")]
     ]
@@ -208,7 +217,7 @@ def launch_main_window():
         [sg.T("Final Results", font=h2, pad=inputs_pad_standard)],
         [sg.T("Time Elapsed: ", visible=False, font=h3, key="-TIME-")],
         [sg.T("Results", key="-RES-", size=(output_width,result_height), font=h3)],
-        [sg.B("Show Results", key="-SHOW-", font=h3)]
+        [sg.B("Show Results", key="-SHOW-", font=h3), sg.B("Clear Results", key="-CLEAR-", font=h3)]
         # [sg.HSeparator()]
     ]
 
@@ -249,6 +258,11 @@ while True:             # Event Loop
             window.close()
             # exit()
         exit()
+
+    # handling popup event
+    if event == "-FORGET-":
+        email = sg.popup_get_text('Enter your email address', 'Forget Password', size=(20,3), font=login_had4)
+        sg.popup('Password Recovery', 'Instructions to recover are sent to', email)
 
     # taking control back to login window
     if event == "-REGOK-":
@@ -292,6 +306,14 @@ while True:             # Event Loop
         window["-VFPS-"].update(value="Video frame rate:" )
         window["-VDUR-"].update(value="Video duration: ")
         window["-VBRS-"].update(disabled=True)
+        try:
+            cam = cv2.VideoCapture(0)
+            fps = int(cam.get(5))
+            cam.release()
+            cv2.destroyAllWindows()
+        except:
+            print("[ERROR] Live Stream is unable to read")
+
         video_source_changing=1
         if not video_file and len(picture_input)>0:
             window["-START-"].update(disabled=False)        # if cam stream it should be abled to perform
@@ -331,14 +353,22 @@ while True:             # Event Loop
     if event == "-FPS1-":
         window["-DFLT2-"].update("Verify Frame Rate\t: 1FPS  (default)")
         aprx_ratio = 0.75
-        time_s = (duration * aprx_ratio) + 10
-        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        if time>60:
-            time_m = time_s/60
-            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-            if time_m >60:
-                time_h= time_m/60
-                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        est_sec = int(frame_count / fps * aprx_ratio + 10)
+        est_min = int(est_sec / 60)
+        est_sec = int(est_sec % 60)
+        est_hr = int(est_min / 60)
+        est_min = int(est_min % 60)
+        estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
+        window["-APRX-"].update(estimated_time_string)
+
+        # time_s = (duration * aprx_ratio) + 10
+        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        # if time>60:
+        #     time_m = time_s/60
+        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+        #     if time_m >60:
+        #         time_h= time_m/60
+        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
         v_fps = 1
         print("[INFO] FPS: ", v_fps)
         print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
@@ -346,14 +376,22 @@ while True:             # Event Loop
     if event == "-FPS2-":
         window["-DFLT2-"].update("Verify Frame Rate\t: 2FPS")
         aprx_ratio = 1.5
-        time_s = (duration * aprx_ratio) + 10
-        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        if time_s>60:
-            time_m = time_s / 60
-            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-            if time_m > 60:
-                time_h = time_m / 60
-                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        est_sec = int(frame_count / fps * aprx_ratio + 10)
+        est_min = int(est_sec / 60)
+        est_sec = int(est_sec % 60)
+        est_hr = int(est_min / 60)
+        est_min = int(est_min % 60)
+        estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
+        window["-APRX-"].update(estimated_time_string)
+
+        # time_s = (duration * aprx_ratio) + 10
+        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        # if time_s>60:
+        #     time_m = time_s / 60
+        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+        #     if time_m > 60:
+        #         time_h = time_m / 60
+        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
         v_fps = 2
         print("[INFO] FPS: ", v_fps)
         print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
@@ -362,14 +400,23 @@ while True:             # Event Loop
     if event == "-FPS3-":
         window["-DFLT2-"].update("Verify Frame Rate\t: 3FPS")
         aprx_ratio = 2.25
-        time_s = (duration * aprx_ratio) + 10
-        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        if time_s>60:
-            time_m = time_s / 60
-            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-            if time_m > 60:
-                time_h = time_m / 60
-                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        est_sec = int(frame_count / fps * aprx_ratio + 10)
+        est_min = int(est_sec / 60)
+        est_sec = int(est_sec % 60)
+        est_hr = int(est_min / 60)
+        est_min = int(est_min % 60)
+        estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
+        window["-APRX-"].update(estimated_time_string)
+
+
+        # time_s = (duration * aprx_ratio) + 10
+        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        # if time_s>60:
+        #     time_m = time_s / 60
+        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+        #     if time_m > 60:
+        #         time_h = time_m / 60
+        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
         v_fps = 3
         print("[INFO] FPS: ", v_fps)
         print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
@@ -378,14 +425,23 @@ while True:             # Event Loop
     if event == "-FPS4-":
         window["-DFLT2-"].update("Verify Frame Rate\t: 4FPS")
         aprx_ratio = 3
-        time_s = (duration * aprx_ratio) + 10
-        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        if time_s>60:
-            time_m = time_s / 60
-            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-            if time_m > 60:
-                time_h = time_m / 60
-                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+
+        est_sec = int(frame_count / fps * aprx_ratio + 10)
+        est_min = int(est_sec / 60)
+        est_sec = int(est_sec % 60)
+        est_hr = int(est_min / 60)
+        est_min = int(est_min % 60)
+        estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
+        window["-APRX-"].update(estimated_time_string)
+
+        # time_s = (duration * aprx_ratio) + 10
+        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        # if time_s>60:
+        #     time_m = time_s / 60
+        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+        #     if time_m > 60:
+        #         time_h = time_m / 60
+        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
         v_fps = 4
         print("[INFO] FPS: ", v_fps)
         print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
@@ -409,19 +465,35 @@ while True:             # Event Loop
         window["-DFLT4-"].update("Show Video\t: NO    (default)")
         v_show = False
         print("[INFO] Video SHOW: ", v_show)
+        est_sec = int(frame_count / fps * aprx_ratio + 10)
+        est_min = int(est_sec / 60)
+        est_sec = int(est_sec % 60)
+        est_hr = int(est_min / 60)
+        est_min = int(est_min % 60)
+        estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
+        window["-APRX-"].update(estimated_time_string)
 
     if event == "-VSHOW2-":
         window["-DFLT4-"].update("Show Video\t: YES")
         v_show = True
         print("[INFO] Video SHOW: ", v_show)
-        time_s = (duration * aprx_ratio * 1.05) + 10        # 1.05 approximately delay ratio for showing vs not showing
-        window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        if time_s > 60:
-            time_m = time_s / 60
-            window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-            if time_m > 60:
-                time_h = time_m / 60
-                window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        est_sec = int(frame_count / fps * aprx_ratio *1.05 + 10)
+        # 1.05 approximately delay ratio for showing vs not showing
+        est_min = int(est_sec / 60)
+        est_sec = int(est_sec % 60)
+        est_hr = int(est_min / 60)
+        est_min = int(est_min % 60)
+        estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
+        window["-APRX-"].update(estimated_time_string)
+
+        # time_s = (duration * aprx_ratio * 1.05) + 10        # 1.05 approximately delay ratio for showing vs not showing
+        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
+        # if time_s > 60:
+        #     time_m = time_s / 60
+        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+        #     if time_m > 60:
+        #         time_h = time_m / 60
+        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
 
     # setting person name
     if event == "-PRNAME-":
@@ -476,19 +548,37 @@ while True:             # Event Loop
             vid_url = video_input.rsplit("dett", 1)
             vid_url = vid_url[1][1:]
             # print(vid_url)
-            cam = cv2.VideoCapture(vid_url)
-            fps = cam.get(cv2.CAP_PROP_FPS)
-            clip= VideoFileClip(vid_url)
-            duration= clip.duration
+            cap = cv2.VideoCapture(vid_url)
+            fps = int(cap.get(5))
+            print("[INFO] fps of selected video", fps)
+            frame_count= int(cap.get(7))
+            cap.release()
+            cv2.destroyAllWindows()
+            print("[INFO] Total frames of selected video", frame_count)
+            # clip= VideoFileClip(vid_url)
+            # duration= clip.duration
+            sec = int(frame_count / fps)
+            min = int(sec / 60)
+            sec = int(sec % 60)
+            hr = int(min / 60)
+            min = int(min % 60)
+            # int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             # getting/setting estimated duration
-            time_s = (duration * aprx_ratio) + 10
-            window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-            if time_s > 60:
-                time_m = time_s / 60
-                window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-                if time_m > 60:
-                    time_h = time_m / 60
-                    window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+            video_duration_string= "Video duration: " + str(hr) + ":" +str(min)+ ":" + str(sec)
+            est_sec = int(frame_count / fps * aprx_ratio + 10)
+            est_min = int(est_sec / 60)
+            est_sec = int(est_sec % 60)
+            est_hr = int(est_min / 60)
+            est_min = int(est_min % 60)
+            estimated_time_string= "Estimated time to process: "+str(est_hr)+":"+str(est_min)+":"+str(est_sec)
+            window["-APRX-"].update(estimated_time_string)
+
+            # if time_s > 60:
+            #     time_m = time_s / 60
+            #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+            #     if time_m > 60:
+            #         time_h = time_m / 60
+            #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
 
             vid_name = vid_url.rsplit("/", 1)
             # print(vid_name, pic_url)
@@ -496,9 +586,9 @@ while True:             # Event Loop
             message_fps = "Video frame rate: %s" % fps
             # print(vid_name, fps, pic_url)
             # window.refresh()
-            window["-VNAME"].update(value=str(vid_name))
-            window["-VFPS-"].update(value=str(message_fps))
-            window["-VDUR-"].update(value= f'{"Video duration: "}{duration}{"sec"}')
+            window["-VNAME"].update(value=vid_name)
+            window["-VFPS-"].update(value=message_fps)
+            window["-VDUR-"].update(value=video_duration_string)
         else:
             # start button back to disabled if video input missing
             if video_file:
@@ -584,23 +674,40 @@ while True:             # Event Loop
                         # for HH:MM:SS time format
                         if not video_file:
                             fps=30
-                        start_time = get_time_format((frames/fps), True)
-                        end_time= get_time_format((last_frame/fps), False)
+                        # start_time = get_time_format((frames/fps), True)
+                        # end_time= get_time_format((last_frame/fps), False)
+
+                        start_time_seconds = int(frames / fps)
+                        start_time_mins = int(start_time_seconds / 60)
+                        start_time_seconds = int(start_time_seconds % 60)
+                        start_time_hour = int(start_time_mins / 60)
+                        start_time_mins = int(start_time_mins % 60)
+
+                        start_time_string = str(start_time_hour) + ":" + str(start_time_mins) + ":" + str(start_time_seconds)
+
+                        end_time_seconds = int(last_frame / fps)
+                        end_time_mins = int(end_time_seconds / 60)
+                        end_time_seconds = int(end_time_seconds % 60)
+                        end_time_hour = int(end_time_mins / 60)
+                        end_time_mins = int(end_time_mins % 60)
+
+                        end_time_string = str(end_time_hour) + ":" + str(end_time_mins) + ":" + str(end_time_seconds)
+
                         if total_results >= 15:
                             result_output_2= "\nOnly showing first 15 results; All results are stored\nin Final_Results_Invidet.txt"
-                            result_output_3 = result_output_3 + str(find) + ". " + person_name + " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                            result_output_3 = result_output_3 + str(find) + ". " + person_name + " was found approximately during \n    " + start_time_string + " to " + end_time_string + ".\n"
                             print("\n[RESULTS]", person_name, "was found:")
                             print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
-                            print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time,
-                                  "sec to ", end_time)
+                            print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time_string,
+                                  "sec to ", end_time_string)
                             find += 1
                         else:
                             total_results += 1
 
-                            result_output_1 = result_output_1 + str(find) + ". " +person_name+ " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                            result_output_1 = result_output_1 + str(find) + ". " +person_name+ " was found approximately during \n    " + start_time_string + " to " + end_time_string + ".\n"
                             print("\n[RESULTS]", person_name, "was found:")
                             print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
-                            print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time, "sec to ", end_time)
+                            print("[RESULTS] That is approximately Face Matched during time \n[RESULTS] ", start_time_string, "sec to ", end_time_string)
                             find+=1
                 find+= 1
 
@@ -615,13 +722,29 @@ while True:             # Event Loop
                     frames = track_records[len(track_records) - 2]
                     last_frame = track_records[len(track_records) - 1]
 
-                    start_time = get_time_format((frames / fps), True)
-                    end_time = get_time_format((last_frame / fps), False)
+                    # start_time = get_time_format((frames / fps), True)
+                    # end_time = get_time_format((last_frame / fps), False)
+                    start_time_seconds = int(frames / fps)
+                    start_time_mins = int(start_time_seconds / 60)
+                    start_time_seconds = int(start_time_seconds % 60)
+                    start_time_hour = int(start_time_mins / 60)
+                    start_time_mins = int(start_time_mins % 60)
 
-                    result_output_1 = result_output_1 + str(find) + ". " + person_name + " was found approximately during \n    " + str(start_time) + " to " + str(end_time) + ".\n"
+                    start_time_string = str(start_time_hour) + ":" + str(start_time_mins) + ":" + str(
+                        start_time_seconds)
+
+                    end_time_seconds = int(last_frame / fps)
+                    end_time_mins = int(end_time_seconds / 60)
+                    end_time_seconds = int(end_time_seconds % 60)
+                    end_time_hour = int(end_time_mins / 60)
+                    end_time_mins = int(end_time_mins % 60)
+
+                    end_time_string = str(end_time_hour) + ":" + str(end_time_mins) + ":" + str(end_time_seconds)
+
+                    result_output_1 = result_output_1 + str(find) + ". " + person_name + " was found approximately during \n    " + start_time_string + " to " + end_time_string + ".\n"
                     print("\n[RESULTS]", person_name, "was found:")
                     print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
-                    print("[RESULTS] That is approximately Face Matched during time \n[RESULTS]", start_time, "sec to ", end_time)
+                    print("[RESULTS] That is approximately Face Matched during time \n[RESULTS]", start_time_string, "sec to ", end_time_string)
                 window.refresh()
                 window["-RES-"].update(result_output_0+result_output_1+result_output_2)
                 result_text_file= open("Final_Results_Invidet.txt", "w")

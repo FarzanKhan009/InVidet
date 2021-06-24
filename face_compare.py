@@ -65,6 +65,9 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     # slicing path string because folder reside in project directory
     pic_url = pic_url.rsplit("InVidett", 1)
     pic_url = pic_url[1][1:]
+    picture_name=pic_url.rsplit("/", 1)[1][0:3]
+    output_video_name=person_name+"-"+picture_name
+
     # getting aligned face
     # pic_face= extract_align_face(pic_url)       #pic_face is aligned np array of face
     # print(pic_url)
@@ -78,8 +81,6 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     pic_face = expand_dims(pic_face, axis=0)
     pic_embeddings = encodder.embeddings(np.array(pic_face))
 
-
-
     total_frames= 99
 
     # initializing to count tota frames
@@ -92,6 +93,8 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
     if video_file:
         try:
             vid_url = vid_url.rsplit("InVidett", 1)
+            video_name= str(vid_url).rsplit("/",1)[1][0:3]
+            output_video_name=output_video_name+"-"+video_name
             vid_url = vid_url[1][1:]
             cap = cv2.VideoCapture(vid_url)
             width = int(cap.get(3))
@@ -109,8 +112,9 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
         try:
             cap = cv2.VideoCapture(0)
             print("[INFO] Video file is successfully loaded")
+            output_video_name=output_video_name+"-onLiveCam"
         except:
-            print("[ERROR] Video is unable to load, check path")
+            print("[ERROR] Cam is unable to load, check path")
             tracked_list = ["ERROR"]
             return tracked_list
 
@@ -121,7 +125,8 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         # if video_file:
             # size= tuple((width, height))
-        out = cv2.VideoWriter('pic_input/output.avi', fourcc, v_fps, (width,height))      #(640, 480))
+        output_video_url="pic_input/"+output_video_name+".avi"
+        out = cv2.VideoWriter(output_video_url, fourcc, v_fps, (width,height))      #(640, 480))
         print("[INFO] Output video path is set to pic_input/output.avi")
 
     # initializing frame counts
@@ -224,13 +229,19 @@ def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v
                         message1="[Current Frame: "+str(countframes)+"/"+str(total_frames)+"]"
                         message3 = "["+person_name+"]" + " , [DISTANCE: " + str(distance)[0:4]+"]"
                         sec= countframes/fps
-                        if sec>60:
-                            min= sec/60
-                            message2="[Aprx Time: "+str(int(min))+" min]"      #internal int so that no float values long string in show
-                            if min >60:
-                                hr= min/60
-                                message2 = "[Aprx Time: " + str(int(hr)) + " hr]"  # internal int so that no float values long string in show
-                        message2 = "[Aprx Time: " + str(int(sec)) + " sec]"  # internal int so that no float values long string in show
+                        min = int(sec/60)
+                        sec= int(sec%60)
+                        hr= int(min/60)
+                        min= int(min/60)
+
+                        message2 = "[Aprx Time: " + str(hr) + ":" +str(min)+ ":" + str(sec) + "]"
+                        # if sec>60:
+                        #     min= sec/60
+                        #     message2="[Aprx Time: "+str(int(min))+" min]"      #internal int so that no float values long string in show
+                        #     if min >60:
+                        #         hr= min/60
+                        #         message2 = "[Aprx Time: " + str(int(hr)) + " hr]"  # internal int so that no float values long string in show
+                        # message2 = "[Aprx Time: " + str(int(sec)) + " sec]"  # internal int so that no float values long string in show
 
                         if not video_file:
                             current_time= times.now()
