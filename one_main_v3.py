@@ -1,48 +1,80 @@
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█ Imports
+#                                                        ▄▄▄▌▐██▌█
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+#```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+# it is to open text file in windows
 import os
+# it is to open text file in linux
 import subprocess
-
+# a simple GUI framework
 import PySimpleGUI as sg
-
+# to terminate the program on pressing exit button or window closing
 from sys import exit
-
+# to do operations on arrays of images
 import numpy as np
+# to read the live time
 import times
+# Image library help in reading images also creating images from arrays
 from PIL import Image
+# computer vision library to perform operations on images and videos
 from cv2 import cv2
+# keras implementation of facenet
 from keras_facenet import FaceNet
-from moviepy.video.io.VideoFileClip import VideoFileClip
-
+# to expand dimensions
 from keras.backend import expand_dims
+# to calculate distances bw embeddings
 from scipy.spatial.distance import cosine
+# to read the monitors an obtain screen sizes
 from screeninfo import get_monitors
-# for m in get_monitors():
-#     print(str(m))
-from face_compare import compare_faces
 
-output_logs, final_results="", ""       #initializing to store outputlogs and results later save as text file
+
+
+
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█ Some variables
+#                                                        ▄▄▄▌▐██▌█
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+#```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+# getting screen size
 width= get_monitors()[0].width
 height= get_monitors()[0].height
 screensize=(int(width), int(height))
 print("[INFO] Reading screen size\n[INFO] size set to: ", screensize, "Type of: ", type(screensize))
-# print("screen", get_monitors(), type(get_monitors()), get_monitors()[0].height, type(get_monitors()[0]))
 
-
-# taking some variables for tracking purpose
+# to carry addresses of picture and video file
 vid_url,  pic_url= "",""
-
-
+# it is to carry total frames from first read by cv2
 total_frames = 0
+# initializing these so any sub function can access that
 picture_input, video_input, person_name ="", "", "Anonymous"
-threshold, v_fps, fps, frame_count, duration =0.5,1,0,0,0      # defaults
+# setting defaults
+threshold, v_fps, fps, frame_count, duration =0.5,1,1,0,0
 v_out, v_show, video_file= False, False, True
+# when estimating the time to take by process this ration can be
+# multiplied with video duration when 1 vfps otherwise it change
 aprx_ratio= 0.75
 time = (duration * aprx_ratio) + 10
-first = 0       #to check first loop in GUI, for fetching results
+#to check first loop in GUI, for fetching results message in middle column
+first = 0
+# video source conditional check default 0 indicate video file
 video_source_changing=0
+# default divisible and tolerance
 divisible = 0
-tolerance = 4
+tolerance = 5
+
+# Loading model
+encodder = FaceNet()
 
 
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█ GUI variable
+#                                                        ▄▄▄▌▐██▌█  carrying fonts, size etc
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+#```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 
 
 # to use in padding tupple
@@ -68,11 +100,12 @@ sg.theme('dark grey 5')
 
 
 
-
-
-
-# initialinzing model
-encodder = FaceNet()
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█  Some functions
+#                                                        ▄▄▄▌▐██▌█
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+#```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 
 
 
@@ -86,55 +119,17 @@ def get_embedding(face):
 
 
 
-
-
-
-# # take seonds in seconds and return a string with format
-# def get_time_format(seconds, start):
-#
-#     minutes,hours=0,0
-#     time_string = ""
-#     if seconds >= 60:    # check if it exceed 1 minut
-#         minutes = int(seconds / 60)
-#         seconds = int(seconds % 60)
-#         if minutes >= 60:    # check if it exceed 1 hour
-#             hours = int(minutes / 60)
-#             minutes = int(minutes % 60)
-#             if len(str(seconds))<2:     # beautifying by adding 0 in between 10:44:05
-#                 seconds = "0" + str(seconds)
-#             if len(str(minutes))<2:     # 10:02:45
-#                 minutes = "0" + str(minutes)
-#             if len(str(hours))<2:       # 07:55:12
-#                 minutes = "0" + str(minutes)
-#             if start:
-#                 time_string = str(hours) + ":" + str(minutes) + ":" + str(seconds)
-#             else:
-#                 time_string = str(hours) + ":" + str(minutes) + ":" + str(seconds) + " (Hours:Minutes:Seconds)"
-#         else:
-#             if len(str(seconds))<2:     # beautifying
-#                 seconds = "0" + str(seconds)
-#             if len(str(minutes))<2:
-#                 minutes = "0" + str(minutes)
-#             if start:
-#                 time_string = str(minutes) + ":" + str(seconds)
-#             else:
-#                 time_string = str(minutes) + ":" + str(seconds) + " (Minutes:Seconds)"
-#     else:
-#         # seconds = int(seconds)
-#         if seconds <10:
-#             seconds = "0" + str(seconds)[0:3]
-#         if start:
-#             time_string = str(seconds)[0:4]
-#         else:
-#             time_string = str(seconds)[0:4] + " (Seconds)"
-#     return time_string
-#
-#
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█  GUI screens
+#                                                        ▄▄▄▌▐██▌█  in functions
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+#```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 
 
 
 
-
+# login window
 def launch_login_window():
     # layout =
     layout=[
@@ -148,6 +143,7 @@ def launch_login_window():
     in_col=[[sg.Column(layout, element_justification="l", vertical_alignment="center")]]
     return sg.Window('Login - InViDet', in_col, location=(0,0), element_justification="c", size=screensize, finalize=True)
 
+# register window
 def launch_register_window():
     layout = [[sg.Text('Registration', font=login_had1, pad=((5,5), (200,20)))],
               [sg.T("\nEnter 8 digit product key", font=login_had4, pad=login_pad)],
@@ -161,6 +157,7 @@ def launch_register_window():
     in_col=[[sg.Col(layout, element_justification="l", vertical_alignment="c")]]
     return sg.Window('Register - InViDet', in_col,location=(0,0), element_justification="c", size=screensize, finalize=True)
 
+# main program window
 def launch_main_window():
 
     title_layout = [[
@@ -193,8 +190,9 @@ def launch_main_window():
         # person_name_layout
         [sg.HSeparator()],
         [sg.T("Setting", font=h2, pad=setting_pad)],
-        [sg.Text("Person Name", pad=setting_pad, font=h33), sg.Input(key="-PRNAME-", size=(10, 1), pad=setting_pad, font=h33, enable_events=True), sg.Text("(Optional)", pad=setting_pad, font=h3) ],
-        # [sg.Input(key="-PRNAME-", size=(16, 1), pad=setting_pad, font=h3, enable_events=True)],
+        [sg.Text("Person Name", pad=setting_pad, font=h33),
+         sg.Input(key="-PRNAME-", size=(10, 1), pad=setting_pad, font=h33, enable_events=True),
+         sg.Text("(Optional)", pad=setting_pad, font=h3) ],
 
         # threshold_layout
         [sg.T("Threshold", pad=setting_pad, font=h33)],
@@ -217,7 +215,6 @@ def launch_main_window():
         [sg.T("Video Display", pad=setting_pad, font=h33)],
         [sg.Radio("No", "RADIO4", default=True, font=h3, pad=setting_pad, size=(6, 1), key="-VSHOW1-", enable_events=True),
          sg.Radio("Yes", "RADIO4", font=h3, pad=setting_pad, size=(6, 1), key="-VSHOW2-", enable_events=True)],
-        # [sg.B("SET", key='-SET-', pad=setting_pad)],
 
         # alarm
         [sg.T("Alarm On Recognition", pad=setting_pad, font=h33)],
@@ -231,26 +228,29 @@ def launch_main_window():
         [sg.T("Verify Rate\t: 1FPS  (default)", pad=setting_pad, font=h3, key="-DFLT2-", size=(30, 1))],
         [sg.T("Video Out\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT3-", size=(30, 1))],
         [sg.T("Video Display\t: NO    (default)", pad=setting_pad, font=h3, key="-DFLT4-", size=(30, 1))],
+
         # aprx time to process
         [sg.T("Estimated time to process: ", pad=setting_pad, font=h3, key="-APRX-", size=(28, 1))],
 
-        # buttons
+        # buttons Start, logout, exit
         [sg.B("Start Processing", key='-START-', pad=setting_pad, font=h3, disabled=True),
          sg.B("Logout", key='-LOGOUT-', pad=setting_pad, font=h3),
          sg.B("Exit", key='-MAINEXIT-', pad=setting_pad, font=h3),
          sg.T("Error! Inputs Can't Load", font=h3, visible=False, key="-ERR-", text_color="red")]
     ]
 
+    # right column that carry output logs
     right_col = [
         [sg.T("Output Logs", font=h2, pad=inputs_pad_standard)],
         [sg.Output(size=(output_width,output_height))]
     ]
+
+    # middle column that carry Results
     mid_column = [
         [sg.T("Final Results", font=h2, pad=inputs_pad_standard)],
         [sg.T("Time Elapsed: ", visible=False, font=h3, key="-TIME-")],
         [sg.T("Results", key="-RES-", size=(output_width,result_height), font=h3)],
         [sg.B("Show Results", key="-SHOW-", font=h3), sg.B("Clear Results", key="-CLEAR-", font=h3)]
-        # [sg.HSeparator()]
     ]
 
     # final layout/ integrated layout
@@ -263,72 +263,109 @@ def launch_main_window():
     ]
 
     # starting windows
-    print("[INFO] Launching GUI")
-    return sg.Window('InVid Detector', layout, location=(0,0), size=screensize, finalize=True)
-
-login_window, register_window, main_window = launch_login_window(), None, None        # start off with 1 window open
+    print("[INFO] Launching main winow")
+    return sg.Window('Home - InViDet', layout, location=(0,0), size=screensize, finalize=True)
 
 
-while True:             # Event Loop
 
+
+
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█  Launching 1st window
+#                                                        ▄▄▄▌▐██▌█  and HANDLING EVENTS
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+#```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+
+# start off with 1 window open
+login_window, register_window, main_window = launch_login_window(), None, None
+
+
+
+# Event Loop
+while True:
     window, event, values = sg.read_all_windows()
-    # print("window object: ", window)
+
+    # handling when exit button clicked or closing window
     if event == sg.WIN_CLOSED or event in ["-LOGEXIT-" ,"-REGEXIT-", "-MAINEXIT-"]:
 
-        if window == register_window:       # if closing win 2, mark as closed
+        if window == register_window:
             window.close()
             register_window = None
-            # exit()
-            # window.close()
+
         if window == main_window:
             window.close()
             main_window = None
-            # exit()
 
-        if window == login_window:     # if closing win 1, exit program
+        if window == login_window:
             login_window = None
             window.close()
-            # exit()
+
+        # finally exit program in any case
         exit()
 
-    # handling popup event
-    if event == "-FORGET-":
-        email = sg.popup_get_text('Enter your email address', 'Forget Password', size=(20,3), font=login_had4)
-        sg.popup('Password Recovery', 'Instructions to recover are sent to', email)
-
-    # taking control back to login window
-    if event == "-REGOK-":
-        login_window = launch_login_window()
-        register_window.close()
-        register_window = None
-        main_window = None
-
-
-    # taking control to Registration screen
-    if event == '-REGBTN-' and not register_window and not main_window:
-        register_window = launch_register_window()
-        login_window.close()
-        login_window = None
-        main_window = None
-
-    # taking back to login screen
-    if event == "-BKLOGIN-" and not login_window and not main_window:
-        login_window = launch_login_window()
-        register_window.close()
-        register_window = None
-        main_window = None
-
+    # taking control to main window, if successfully login
     if event == "-LOGINBTN-" and not register_window and not main_window:
         main_window = launch_main_window()
         login_window.close()
         login_window = None
         register_window = None
 
+    # handling popup event if clicked forget password
+    if event == "-FORGET-":
+        email = sg.popup_get_text('Enter your email address', 'Forget Password', size=(20,3), font=login_had4)
+        sg.popup('Password Recovery', 'Instructions to recover are sent to', email)
+
+    # taking control to Registration screen, when clicked register now
+    if event == '-REGBTN-' and not register_window and not main_window:
+        register_window = launch_register_window()
+        login_window.close()
+        login_window = None
+        main_window = None
+
+    # taking back to login screen, clicked login now, from register screen
+    if event == "-BKLOGIN-" and not login_window and not main_window:
+        login_window = launch_login_window()
+        register_window.close()
+        register_window = None
+        main_window = None
+
+    # taking control back to login window, if successfully registered
+    if event == "-REGOK-":
+        login_window = launch_login_window()
+        register_window.close()
+        register_window = None
+        main_window = None
+
+    # taking control back to login window, if logout, from main window
+    if event == "-LOGOUT-":
+        login_window = launch_login_window()
+        main_window.close()
+        register_window = None
+        main_window = None
 
 
-    # handling video stream choice
+
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█  Load inputs
+#                                                        ▄▄▄▌▐██▌█  in HANDLING EVENTS
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+#```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+
+
+
+
+    # handling video source choice
+    # if cam stream
     if event == "-VIN1-":
-        # emptying video variable as well as video input sources when it clicked second time, coming back from cam stream
+        if video_source_changing == 1:
+            continue        # doing it so that it wont monitor every click, only monitor first click to cam stream or video file
+
+
+        # emptying video variable as well as video input sources when it clicked second time,
+        # coming back from cam stream, to specifically asked the user to select new video
+        # dont rely on previous video choices
         video_input=""
         window["-VIDIN-"].update("")
         video_file=False
@@ -341,28 +378,152 @@ while True:             # Event Loop
         try:
             cam = cv2.VideoCapture(0)
             fps = int(cam.get(5))
+            print("fps:", fps)
             cam.release()
             cv2.destroyAllWindows()
         except:
             print("[ERROR] Live Stream is unable to read")
+            print("[ERROR] Permission Denied!")
             break
 
         video_source_changing=1
+        # if cam stream it should be able to perform, dont wait for video input as
+        # source has changed to cam stream and picture is loaded
+        # start button now enabled
         if not video_file and len(picture_input)>0:
-            window["-START-"].update(disabled=False)        # if cam stream it should be abled to perform
+            window["-START-"].update(disabled=False)
+
+    # if video file
     if event == "-VIN2-":
         if video_source_changing == 0:
-            continue        # doing it so that it not monitor every click only monitor if once clicked to cam stream
+            continue        # doing it so that it wont monitor every click, only monitor first click to cam stream or video file
 
+        # start became disabled again if no source video, unless there is video file loaded
         if video_input == "":
-            window["-START-"].update(disabled= True)    # it became disabled again if no source video
+            window["-START-"].update(disabled= True)
         video_file=True
         print("[INFO] Video source changed to video file on disc")
         window["-VBRS-"].update(disabled=False)
         video_source_changing=0
 
+    # load button, it verify extension and fill the address carrying variables picture_input or video_input
+    if event == '-LOAD-':
+        picture_input = values["-PICIN-"]
+        video_input = values["-VIDIN-"]
+        window.refresh()
+        # if brows button returned some string of address, it length would be greater than 0
+        if len(picture_input) > 0:
+            image_extension = picture_input.rsplit(".", 1)[1]
+            # check on extension
+            if image_extension not in ["tif", "tiff", "bmp", "jpg", "jpeg", "gif", "png", "esp"]:
+                print(
+                    "[ERROR] Image file extension is not known\n[ERROR] Check Image path, chose again with known image\n[ERROR] extensions instead of .%s" % image_extension)
+                window["-SPIC-"].update("Picture Error")
+                continue
+
+            print("[INFO] Picture is loaded")
+            window["-SPIC-"].update("Picture SELECTED")
+            pic_name = picture_input.rsplit("/", 1)
+            pic_name = "Picture name: %s" % pic_name[1]
+            window["-PNAME-"].update(value=str(pic_name))
+        else:
+            print("[WARN] Picture is MISSING")
+        window.refresh()
+        if len(video_input) > 0:
+
+            video_extension = video_input.rsplit(".", 1)[1]
+            # check on extension
+            if video_extension not in ["mp4", "MP4", "MOV", "mov", "WMV", "wmv", "FLV", "flv", "AVI", "avi",
+                                       "AVCHD", "avchd", "WebM", "webm", "MKV", "mkv"]:
+                print(
+                    "[ERROR] Video file extension is not known\n[ERROR] Check Video path, chose again with known Video\n"
+                    "[ERROR] extensions instead of .%s" % video_extension)
+                window["-SVID-"].update("Video Error")
+                continue
+
+            print("[INFO] Video is loaded")
+            window["-SVID-"].update("Video SELECTED")
+            # obtaining fps and setting text
+
+            vid_url = video_input.rsplit("dett", 1)
+            vid_url = vid_url[1][1:]
+            # print(vid_url)
+            cap = cv2.VideoCapture(vid_url)
+            fps = int(cap.get(5))
+            print("[INFO] fps of selected video", fps)
+            frame_count = int(cap.get(7))
+            cap.release()
+            cv2.destroyAllWindows()
+            print("[INFO] Total frames of selected video", frame_count)
+            # clip= VideoFileClip(vid_url)
+            # duration= clip.duration
+            sec = int(frame_count / fps)
+            min = int(sec / 60)
+            sec = int(sec % 60)
+            hr = int(min / 60)
+            min = int(min % 60)
+            # int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            # getting/setting estimated duration
+            video_duration_string = "Video duration: " + str(hr) + ":" + str(min) + ":" + str(sec)
+            est_sec = int(frame_count / fps * aprx_ratio + 10)
+            est_min = int(est_sec / 60)
+            est_sec = int(est_sec % 60)
+            est_hr = int(est_min / 60)
+            est_min = int(est_min % 60)
+            estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(
+                est_sec)
+            window["-APRX-"].update(estimated_time_string)
+
+            # if time_s > 60:
+            #     time_m = time_s / 60
+            #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
+            #     if time_m > 60:
+            #         time_h = time_m / 60
+            #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+
+            vid_name = vid_url.rsplit("/", 1)
+            # print(vid_name, pic_url)
+            vid_name = f'{"Video name: "}{vid_name[1]}'
+            message_fps = "Video frame rate: %s" % fps
+            # print(vid_name, fps, pic_url)
+            # window.refresh()
+            window["-VNAME"].update(value=vid_name)
+            window["-VFPS-"].update(value=message_fps)
+            window["-VDUR-"].update(value=video_duration_string)
+        else:
+            # start button back to disabled if video input missing
+            if video_file:
+                window["-START-"].update(disabled=True)
+                print("[WARN] Video is MISSING")
+        # window.refresh()
+
+        if len(picture_input) > 0 and len(video_input) > 0:
+            print("[INFO] Inputs are loaded successfully")
+            window["-START-"].update(disabled=False)
+            window["-ERR-"].update(visible=False)
+            window.refresh()
+        if not video_file and len(picture_input) > 0:
+            print("[INFO] Inputs are loaded successfully")
+            window["-START-"].update(disabled=False)
+            window["-ERR-"].update(visible=False)
+            window.refresh()
 
 
+
+
+
+
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█  Setting
+#                                                        ▄▄▄▌▐██▌█  in HANDLING EVENTS
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+# ```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+
+
+
+
+    # handling threshold choices
     if event== "-TH1-":
         window["-DFLT1-"].update("Set Threshold\t: 0.4")
         threshold = 0.4
@@ -385,6 +546,7 @@ while True:             # Event Loop
     # setting vfps
     if event == "-FPS1-":
         window["-DFLT2-"].update("Verify Frame Rate\t: 1FPS  (default)")
+        # updating time estomation based on choice
         aprx_ratio = 0.75
         est_sec = int(frame_count / fps * aprx_ratio + 10)
         est_min = int(est_sec / 60)
@@ -394,20 +556,14 @@ while True:             # Event Loop
         estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
         window["-APRX-"].update(estimated_time_string)
 
-        # time_s = (duration * aprx_ratio) + 10
-        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        # if time>60:
-        #     time_m = time_s/60
-        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-        #     if time_m >60:
-        #         time_h= time_m/60
-        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        # setting verifying fps
         v_fps = 1
         print("[INFO] FPS: ", v_fps)
         print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
 
     if event == "-FPS2-":
         window["-DFLT2-"].update("Verify Frame Rate\t: 2FPS")
+        # updating time estomation based on choice
         aprx_ratio = 1.5
         est_sec = int(frame_count / fps * aprx_ratio + 10)
         est_min = int(est_sec / 60)
@@ -417,14 +573,7 @@ while True:             # Event Loop
         estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
         window["-APRX-"].update(estimated_time_string)
 
-        # time_s = (duration * aprx_ratio) + 10
-        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        # if time_s>60:
-        #     time_m = time_s / 60
-        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-        #     if time_m > 60:
-        #         time_h = time_m / 60
-        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        # setting verifying fps
         v_fps = 2
         print("[INFO] FPS: ", v_fps)
         print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
@@ -432,6 +581,7 @@ while True:             # Event Loop
 
     if event == "-FPS3-":
         window["-DFLT2-"].update("Verify Frame Rate\t: 3FPS")
+        # updating time estomation based on choice
         aprx_ratio = 2.25
         est_sec = int(frame_count / fps * aprx_ratio + 10)
         est_min = int(est_sec / 60)
@@ -441,15 +591,7 @@ while True:             # Event Loop
         estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
         window["-APRX-"].update(estimated_time_string)
 
-
-        # time_s = (duration * aprx_ratio) + 10
-        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        # if time_s>60:
-        #     time_m = time_s / 60
-        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-        #     if time_m > 60:
-        #         time_h = time_m / 60
-        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        # setting verifying fps
         v_fps = 3
         print("[INFO] FPS: ", v_fps)
         print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
@@ -457,8 +599,8 @@ while True:             # Event Loop
 
     if event == "-FPS4-":
         window["-DFLT2-"].update("Verify Frame Rate\t: 4FPS")
+        # updating time estomation based on choice
         aprx_ratio = 3
-
         est_sec = int(frame_count / fps * aprx_ratio + 10)
         est_min = int(est_sec / 60)
         est_sec = int(est_sec % 60)
@@ -467,21 +609,14 @@ while True:             # Event Loop
         estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
         window["-APRX-"].update(estimated_time_string)
 
-        # time_s = (duration * aprx_ratio) + 10
-        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        # if time_s>60:
-        #     time_m = time_s / 60
-        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-        #     if time_m > 60:
-        #         time_h = time_m / 60
-        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
+        # setting verifying fps
         v_fps = 4
         print("[INFO] FPS: ", v_fps)
         print("[INFO] Estimated time to process: ", (duration* aprx_ratio)+10, "seconds")    # 0.75 is ratio on my pc for v1FPS +10 tensor flow loading delay
 
 
 
-    # setting video write option
+    # setting video write options
     if event == "-VOUT1-":
         window["-DFLT3-"].update("Write Video\t: NO    (default)")
         v_out = False
@@ -493,11 +628,13 @@ while True:             # Event Loop
         print("[INFO] Video OUT: ", v_out)
 
 
-    # setting Video show option
+    # setting Video show options
     if event == "-VSHOW1-":
         window["-DFLT4-"].update("Show Video\t: NO    (default)")
         v_show = False
         print("[INFO] Video SHOW: ", v_show)
+
+        # showing video may cause a little delay so updating it
         est_sec = int(frame_count / fps * aprx_ratio + 10)
         est_min = int(est_sec / 60)
         est_sec = int(est_sec % 60)
@@ -510,6 +647,8 @@ while True:             # Event Loop
         window["-DFLT4-"].update("Show Video\t: YES")
         v_show = True
         print("[INFO] Video SHOW: ", v_show)
+
+        # showing video may cause a little delay so updating it
         est_sec = int(frame_count / fps * aprx_ratio *1.05 + 10)
         # 1.05 approximately delay ratio for showing vs not showing
         est_min = int(est_sec / 60)
@@ -519,14 +658,6 @@ while True:             # Event Loop
         estimated_time_string = "Estimated time to process: " + str(est_hr) + ":" + str(est_min) + ":" + str(est_sec)
         window["-APRX-"].update(estimated_time_string)
 
-        # time_s = (duration * aprx_ratio * 1.05) + 10        # 1.05 approximately delay ratio for showing vs not showing
-        # window["-APRX-"].update("Estimated time to process: %s sec" % str(time_s)[0:4])
-        # if time_s > 60:
-        #     time_m = time_s / 60
-        #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-        #     if time_m > 60:
-        #         time_h = time_m / 60
-        #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
 
     # setting person name
     if event == "-PRNAME-":
@@ -537,119 +668,23 @@ while True:             # Event Loop
 
 
 
-
-    #
-    # if event == "-PBRS-":
-    #     window.refresh()
-    #     print(window["-PICIN-"].get())
-    #     window.refresh()
-    if event == '-LOAD-':
-        picture_input=values["-PICIN-"]
-        video_input= values["-VIDIN-"]
-        window.refresh()
-        if len(picture_input)>0:
-            image_extension= picture_input.rsplit(".", 1)[1]
-            # check on extension
-            if image_extension not in ["tif", "tiff", "bmp", "jpg", "jpeg", "gif", "png", "esp"]:
-                print("[ERROR] Image file extension is not known\n[ERROR] Check Image path, chose again with known image\n[ERROR] extensions instead of .%s" %image_extension)
-                window["-SPIC-"].update("Picture Error")
-                continue
-
-            print("[INFO] Picture is loaded")
-            window["-SPIC-"].update("Picture SELECTED")
-            pic_name = picture_input.rsplit("/", 1)
-            pic_name = "Picture name: %s" % pic_name[1]
-            window["-PNAME-"].update(value=str(pic_name))
-        else:
-            print("[WARN] Picture is MISSING")
-        window.refresh()
-        if len(video_input)>0:
-
-            video_extension= video_input.rsplit(".", 1)[1]
-            # check on extension
-            if video_extension not in ["mp4", "MP4", "MOV", "mov", "WMV", "wmv", "FLV", "flv" , "AVI", "avi", "AVCHD", "avchd", "WebM", "webm", "MKV", "mkv"]:
-                print("[ERROR] Video file extension is not known\n[ERROR] Check Video path, chose again with known Video\n[ERROR] extensions instead of .%s" %video_extension)
-                window["-SVID-"].update("Video Error")
-                continue
-
-
-
-            print("[INFO] Video is loaded")
-            window["-SVID-"].update("Video SELECTED")
-            # obtaining fps and setting text
-
-            vid_url = video_input.rsplit("dett", 1)
-            vid_url = vid_url[1][1:]
-            # print(vid_url)
-            cap = cv2.VideoCapture(vid_url)
-            fps = int(cap.get(5))
-            print("[INFO] fps of selected video", fps)
-            frame_count= int(cap.get(7))
-            cap.release()
-            cv2.destroyAllWindows()
-            print("[INFO] Total frames of selected video", frame_count)
-            # clip= VideoFileClip(vid_url)
-            # duration= clip.duration
-            sec = int(frame_count / fps)
-            min = int(sec / 60)
-            sec = int(sec % 60)
-            hr = int(min / 60)
-            min = int(min % 60)
-            # int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            # getting/setting estimated duration
-            video_duration_string= "Video duration: " + str(hr) + ":" +str(min)+ ":" + str(sec)
-            est_sec = int(frame_count / fps * aprx_ratio + 10)
-            est_min = int(est_sec / 60)
-            est_sec = int(est_sec % 60)
-            est_hr = int(est_min / 60)
-            est_min = int(est_min % 60)
-            estimated_time_string= "Estimated time to process: "+str(est_hr)+":"+str(est_min)+":"+str(est_sec)
-            window["-APRX-"].update(estimated_time_string)
-
-            # if time_s > 60:
-            #     time_m = time_s / 60
-            #     window["-APRX-"].update("Estimated time to process: %s min" % str(time_m)[0:4])
-            #     if time_m > 60:
-            #         time_h = time_m / 60
-            #         window["-APRX-"].update("Estimated time to process: %s hour" % str(time_h)[0:4])
-
-            vid_name = vid_url.rsplit("/", 1)
-            # print(vid_name, pic_url)
-            vid_name = f'{"Video name: "}{vid_name[1]}'
-            message_fps = "Video frame rate: %s" % fps
-            # print(vid_name, fps, pic_url)
-            # window.refresh()
-            window["-VNAME"].update(value=vid_name)
-            window["-VFPS-"].update(value=message_fps)
-            window["-VDUR-"].update(value=video_duration_string)
-        else:
-            # start button back to disabled if video input missing
-            if video_file:
-                window["-START-"].update(disabled= True)
-                print("[WARN] Video is MISSING")
-        # window.refresh()
-
-        if len(picture_input)>0 and len(video_input)>0:
-            print("[INFO] Inputs are loaded successfully")
-            window["-START-"].update(disabled= False)
-            window["-ERR-"].update(visible=False)
-            window.refresh()
-        if not video_file and len(picture_input)>0:
-            print("[INFO] Inputs are loaded successfully")
-            window["-START-"].update(disabled=False)
-            window["-ERR-"].update(visible=False)
-            window.refresh()
-
-
-
-        # threshold= window["TH1"].get()
-        # print(threshold, type(threshold))
-
     # opening result text file in default editor
     if event == "-SHOW-":
         # OS dependent for windows use OS library
         # os.system("Final_Results_Invidet.txt")
         subprocess.call(["xdg-open", "Final_Results_Invidet.txt"])
+
+
+
+
+
+#                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+#                                                      ───▄▄██▌█  Start Process
+#                                                        ▄▄▄▌▐██▌█  in HANDLING EVENTS
+#                                                       ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄​▄▌
+#                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
+# ```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+
 
 
     if event == "-START-":
@@ -669,6 +704,7 @@ while True:             # Event Loop
 
         window.refresh()
 
+#__________________________________________________Internal Condition Where main logic on Start process actually start______________________________
 
         if len(picture_input)>0 and (len(video_input)>0 or video_file==False):
             if first>0:
@@ -685,52 +721,30 @@ while True:             # Event Loop
             process_start = times.now()
 
 
-            # break point
 
 
+# __________________________________________________Break Point Start_____________________________________________________________________________________
+            # break point its initial where integration started for one_main_V3
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            # below call is no more needed
             # track_records= compare_faces(picture_input, video_input, fps, threshold, v_fps, person_name, v_out, v_show, video_file)
-            # track_records= compare_faces(picture_input, video_input)
 
-            # it is for numbering results at runtime
-
-
-
-
+            # beloe is original compare function defination was this from face_compare module
             #def compare_faces(pic_url, vid_url, fps, threshold, v_fps, person_name, v_out, v_show, video_file):
 
-
-            # print("[INFO] TensorFlow Loaded")
             print("[INFO] Start processing")
 
 
             # checking it is a cam stream, if it is, setting fps by self, not relying on cv2 to get fps from video file or else it raised exception modulo by zero
             # bug fix 1.4
+            #
+            # second thoughts, No more need this bug fix as fps is being set for cam stream at the time
+            # changing video source option in event => VIN1 at line #380
+            # if video_file == False:
+            #     fps = 30
 
-            # seccond thoughts
-            if video_file == False:
-                fps = 30
 
-
-
+            # setting divisibe and tolerance based on vfps choice
             print("[INFO] Calculating divisible based on suitable tolerance...")
             if v_fps == 1:
                 divisible = fps
@@ -757,26 +771,30 @@ while True:             # Event Loop
                 print("[ERRO] Picture was unable to load")
                 break
 
+            # second thoughts; as facenet was failing at embedding for alligned face
+            # it must be due to backend operations and self alignment at some point; no more needed face alignment
+
             # getting aligned face
             # pic_face= extract_align_face(pic_url)       #pic_face is aligned np array of face
             # print(pic_url)
+
+
             print("[INFO] Started face extraction from picture input")
-            # try:
-            print("pic_url", pic_url)
-            pic_face_array = np.array(Image.open(pic_url))
-            pic_face = encodder.extract(pic_url)
-            pic_face = pic_face[0]['box']
-            x1, y1, width, height = pic_face
-            x2, y2, = x1 + width, y1 + height
-            pic_face = pic_face_array[y1:y2, x1:x2]
-            # except:
-            #     print("[ERROR] couldn't get face on picture")
-            #     continue
+            try:
+                pic_face_array = np.array(Image.open(pic_url))
+                pic_face = encodder.extract(pic_url)
+                pic_face = pic_face[0]['box']
+                x1, y1, width, height = pic_face
+                x2, y2, = x1 + width, y1 + height
+                pic_face = pic_face_array[y1:y2, x1:x2]
+            except:
+                print("[ERROR] couldn't get face on picture")
+                continue
 
 
             print("[INFO] Successfully extracted face from picture input")
 
-            # expanding dimensions for facenet
+            # expanding dimensions for facenet; kind of normalizing
             pic_face = expand_dims(pic_face, axis=0)
             try:
                 pic_embeddings = encodder.embeddings(np.array(pic_face))
@@ -802,8 +820,9 @@ while True:             # Event Loop
                     height = int(cap.get(4))
                     fps = int(cap.get(5))
                     print("[INFO] Video file is successfully loaded")
+                    print("[INFO] details video: resolutions:", (width, height), " fps:", fps)
 
-                    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) +25       # this plus 25 is what cv2 count less at average from bigger and smaller videos
 
                 except:
                     print("[ERROR] Video is unable to load, check path")
@@ -814,9 +833,14 @@ while True:             # Event Loop
                 try:
                     cap = cv2.VideoCapture(0)
                     print("[INFO] Cam video is successfully linked")
+
+                    width = int(cap.get(3))
+                    height = int(cap.get(4))
+                    fps = int(cap.get(5))
+                    # print("(w,h", (width,height))
                     output_video_name = output_video_name + "-onLiveCam"
                 except:
-                    print("[ERROR] Cam is unable to load, check path")
+                    print("[ERROR] Cam is unable to load, check permission")
                     tracked_list = ["ERROR"]
                     break
                     # return tracked_list
@@ -829,21 +853,24 @@ while True:             # Event Loop
                 # size= tuple((width, height))
                 output_video_url = "pic_input/" + output_video_name + ".avi"
                 out = cv2.VideoWriter(output_video_url, fourcc, v_fps, (width, height))  # (640, 480))
-                print("[INFO] Output video path is set to pic_input/output.avi")
+                print("[INFO] Output video path is set to:",output_video_url)
 
             # initializing frame counts
             countframes = 0
 
-            # match = 0
-
-            # faces_list = list()
-
+            # to serialize generated results at runtime; may be used in some conditions too
             runtime_find = 1
+
+            # initializing result string to carry and wirte results in the end also to update final results middle column at runtime
             result_string = ""
+
+            # variable is part of logic later to only show result one time one it reached to 15 results
             has_shown_final_message = False
-            countframes=0
+
+            # initializing as a part of logic for tracking
             first_marked_frame, last_marked_frame, not_matched, outer_no_face, match = 0, 0, 0, 0, 0
 
+            # it always true unless video has no more frames, or exception raised at some point.
             while True:
                 try:
                     ret, frame = cap.read()
@@ -853,28 +880,29 @@ while True:             # Event Loop
                     print("[ERROR] Could not load anymore frames")
                     break
 
-                # below if conditional logic is to boost up the speed
-                # taking frame rate to verify from user, implemented, divisible is obtained from user choice
+                # divisible is based on user verifying frame rate per seconds
+                # so it is only go further than this condition if it is desired frame
                 if countframes % int(divisible) != 0:
                     continue
 
-                # Convert the image from BGR color(which OpenCV uses) to RGB
-                # RGB is preferred color while detection faces
+                # because openCV return image in BGR format in cap.read()
+                # has to convert it back to RGB which is prefered in FaceNET and MTCNN
                 try:
                     rgb_frame = frame[:, :, ::-1]
                     frame_array = np.array(rgb_frame)
                 except:
                     # bug fix 1.3
+                    # it cant convert frame to rgb when cap.read() return None in frame
+                    print("[WARN] Got nothing in frame variable coming from openCV, frame=", frame)
                     print("[ERROR] Video file is corrupted or has no more frames, total frames= ", countframes)
                     break
 
                 # loading detector from MTCNN
                 # detector = MTCNN()
-
-                # saving all faces in faces
+                # saving all faces in faces; a call to facenet encodder extract function
                 faces = encodder.extract(rgb_frame)
 
-                # if result get some faces
+                # if it return some faces in current frame; then len(faces) must be greater than one, only then go further
                 if len(faces) > 0:
                     print('[INFO] Found %s faces in frame no: ' % len(faces), countframes)
 
@@ -885,59 +913,63 @@ while True:             # Event Loop
                     face_num = 0
 
                     for face in faces:
-                        # read the documentation of cv2.rectangle()
-                        # starting point coordinates of face are being stored in x1, y1
+                        # starting point coordinates of face are being stored in x1, y1, against each face it returns a dictionary
+                        # dictionary 'box' contain a bounding box which return starting points and from these points a width from x and
+                        # a height y
                         x1, y1, width, height = faces[face_num]['box']
 
                         # storing ending points in x2, y2
                         x2, y2, = x1 + width, y1 + height
 
-                        # extracting this face from frame_array
+                        # extracting current face from frame_array; frame array is whole image or array; we want to extract that single face
                         frame_face = frame_array[y1:y2, x1:x2]
 
                         # expanding dimensions to normalize it for facenet
                         frame_face = expand_dims(frame_face, axis=0)
 
-                        # back to array
-                        # frame_face = np.array(frame_face) #no more needed
-
-                        # increasing face number to extract the next face 'BOX' in current frame
+                        # increasing face number to extract the next face 'BOX' in current frame; for the next coming iteration if it is
                         face_num += 1
 
                         # bug fix
                         # at testing while getting embedding it raised exception, says in resize function of FaceNet
+                        # so it couldn't get embedding sometime; we dont want to break the program; so continue the loop
                         try:
                             frame_face_embeddings = get_embedding(frame_face)
                         except:
                             print("[WARN] Exception raised")
-                            print("[WARN] Could not get embedding for frame ", countframes, "/", total_frames)
+                            print("[WARN] Could not get embedding for frame no:", countframes, "/", total_frames)
                             continue
 
                         # getting distance through cosine
                         distance = cosine(pic_embeddings, frame_face_embeddings)
 
-                        # used threshold provided by user from GUI
-                        print("distance", distance)
+                        # used threshold provided by user from GUI;in our contion
+                        # if not under threshold
                         if distance >= threshold:
                             recognised = False
                             if not video_file:
-                                print("[INFO] Match is False for face", face_num, "/", len(faces), " in the frame",
+                                print("[INFO] Match is False for face", face_num, "/", len(faces), "with the distance", str(distance)[0:3], "in the frame",
                                       countframes, "/", countframes)
                             else:
-                                print("[INFO] Match is False for face", face_num, "/", len(faces), " in the frame",
+                                print("[INFO] Match is False for face", face_num, "/", len(faces), "with the distance", str(distance)[0:3], " in the frame",
                                       countframes, "/", total_frames)
+                        # if in threshold range
                         else:
                             recognised = True
-                            print("[INFO] Match is True for face", face_num, "/", len(faces), " in the frame",
-                                  countframes, "/", total_frames)
+                            if not video_file:
+                                print("[INFO] Match is True for face", face_num, "/", len(faces), "with the distance", str(distance)[0:3], " in the frame",
+                                      countframes, "/", countframes)
+                            else:
+                                print("[INFO] Match is True for face", face_num, "/", len(faces), "with the distance", str(distance)[0:3], " in the frame",
+                                      countframes, "/", total_frames)
+
                             print("[INFO] Saving tracks for current frame", countframes)
                             print("[INFO]", person_name, "found with the distance", str(distance)[0:5])
 
-                        # logic when face is recognised
+                        # logic when face is recognised; its kind of complex here
                         if recognised == True:
                             match += 1
-
-                            # only show frames or video if it set true
+                            # if video is being displayed or being writen
                             if v_show or v_out:
                                 message1 = "[Current Frame: " + str(countframes) + "/" + str(total_frames) + "]"
                                 message3 = "[" + person_name + "]" + " , [DISTANCE: " + str(distance)[0:4] + "]"
@@ -948,23 +980,20 @@ while True:             # Event Loop
                                 min = int(min / 60)
 
                                 message2 = "[Aprx Time: " + str(hr) + ":" + str(min) + ":" + str(sec) + "]"
-                                # if sec>60:
-                                #     min= sec/60
-                                #     message2="[Aprx Time: "+str(int(min))+" min]"      #internal int so that no float values long string in show
-                                #     if min >60:
-                                #         hr= min/60
-                                #         message2 = "[Aprx Time: " + str(int(hr)) + " hr]"  # internal int so that no float values long string in show
-                                # message2 = "[Aprx Time: " + str(int(sec)) + " sec]"  # internal int so that no float values long string in show
 
+                                # if its a live stream; then putting different text on frame
                                 if not video_file:
                                     current_time = times.now()
                                     message2 = "[Live Time: " + str(current_time)[11:19] + "]"
                                     message1 = "[     Date: " + str(current_time)[0:10] + "]"
-                                # "y" show name upper side of bounding box if there is space if no space left show towards donside
+                                # "y"; show name upper side of bounding box if there is space if no space left show towards donside
                                 ms3 = y1 - 10 if y1 - 10 > 10 else y1 + 10
                                 ms2 = y1 - 25 if y1 - 25 > 25 else y1 + 25
                                 ms1 = y1 - 40 if y1 - 40 > 40 else y1 + 40
+
+                                # drawing rectangle around the face points stored in x1,y1, x2,y2
                                 cv2.rectangle(frame_array, (x1, y1), (x2, y2), (155, 25, 25), 2)
+                                # putting text on bounding box
                                 cv2.putText(frame_array, message1, (x1, ms1), cv2.FONT_HERSHEY_SIMPLEX, 0.45,
                                             (155, 25, 25), 2)
                                 cv2.putText(frame_array, message2, (x1, ms2), cv2.FONT_HERSHEY_SIMPLEX, 0.45,
@@ -972,18 +1001,21 @@ while True:             # Event Loop
                                 cv2.putText(frame_array, message3, (x1, ms3), cv2.FONT_HERSHEY_SIMPLEX, 0.45,
                                             (155, 25, 25), 2)
 
-                            # marking first frame
+                            # marking first frame; in which face was recognized
                             if match == 1:
+                                # if video file;
                                 if video_file:
                                     first_marked_frame = countframes
                                     print("[INFO] First Match at frame: ", countframes, "/", total_frames)
+
+                                    # adjusting time
                                     start_time_seconds = int(countframes / fps)
                                     start_time_mins = int(start_time_seconds / 60)
                                     start_time_seconds = int(start_time_seconds % 60)
                                     start_time_hour = int(start_time_mins / 60)
                                     start_time_mins = int(start_time_mins % 60)
-                                    # result_string_list.append(str(runtime_find) + ". Match start at frame no: " + str(
-                                    #     countframes) + ", at time: " + str(start_time_hour) + ":" + str(start_time_mins) + ":" + str(start_time_seconds))
+
+                                    # only for 15 results
                                     if runtime_find <= 15:
                                         result_string = result_string + str(
                                             runtime_find) + ". Match start at frame no: " + str(
@@ -992,28 +1024,26 @@ while True:             # Event Loop
                                         window["-RES-"].update(result_string)
 
                                     else:
-                                        if has_shown_final_message:
-                                            v=10
-                                        else:
+                                        if not has_shown_final_message:
                                             has_shown_final_message = True
                                             result_string = result_string + "\n" + "Showing only first 15 results for more click on show results once process finished\ntotal results so far: " + str(
                                                 runtime_find)
                                             window["-RES-"].update(result_string)
 
-                                    # for res in result_string:
-                                    #     result_string = result_string + res + "\n"
 
+                                # if cam stream
+                                    # print("[INFO] First Match at frame: ", countframes, "/", countframes)
+                                    # result_string_list.append(str(runtime_find)+". Match start at frame no: "+str(countframes)+", at time: "+str(times.now()))
+                                    # updating result run time
                                 else:
                                     first_marked_frame = countframes
                                     tracked_list.append(str(runtime_find) + ". Match start at frame no: " + str(
                                         countframes) + ", at time: " + str(times.now())[0:20]+"\n")
-                                    print("check00", runtime_find)
+
                                     print("[INFO] Match Start at frame no:", first_marked_frame, "/", countframes)
-                                    # print("[INFO] First Match at frame: ", countframes, "/", countframes)
-                                    # result_string_list.append(str(runtime_find)+". Match start at frame no: "+str(countframes)+", at time: "+str(times.now()))
-                                    # updating result run time
+
+                                    # only for first 15 results should show
                                     if runtime_find <= 15:
-                                        print("check11", runtime_find)
                                         result_string = result_string + str(
                                             runtime_find) + ". Match start at frame no: " + str(
                                             countframes) + ", at time: " + str(times.now())[0:20] + "\n"
@@ -1022,9 +1052,8 @@ while True:             # Event Loop
                                         #     result_string = result_string + res + "\n"
 
                                     else:
-                                        print("chevk22", runtime_find)
+                                        # only show the message 1 time
                                         if not has_shown_final_message:
-                                            print("check33", runtime_find)
                                             # print("[INFO] Last Match at frame: ", last_marked_frame, "/", countframes)
                                             has_shown_final_message = True
                                             result_string = result_string + "\n" + "Showing only first 15 results for more click on show results once process finished\ntotal results so far: " + str(
@@ -1036,26 +1065,22 @@ while True:             # Event Loop
 
                             not_matched = 0
                             print("[INFO] Match is True for frame: ", first_marked_frame, " to ", countframes)
-                            print("check44", runtime_find)
                             break
 
                         else:
                             # logic when face is not matched, tolerance tells how much to tolerate this behaviour
                             not_matched += 1
-                            # adding length of faces too, because if there are too many faces tolerate will fail, if alone, Doubt not tested yet
+                            # adding length of faces too, because if there are too many faces tolerate will fail, if alone,
+                            # Doubt not tested yet, but it seems so
                             if not_matched == (tolerance * len(faces)):
                                 if first_marked_frame > 0:
                                     if not video_file:
-                                        # first_marked_frame = countframes
                                         last_marked_frame = int(countframes - (tolerance * divisible))
                                         tracked_list.append(
                                             "Match end at frame no: " + str(countframes) + ", at time: " + str(
                                                 times.now())[0:20]+"\n")
                                         print("[INFO] Last Match at frame: ", last_marked_frame, "/", countframes)
-                                        print("check55", runtime_find)
                                         # updating result run time
-                                        # result_string_list.append("    Match end at frame no: " + str(
-                                        #     last_marked_frame) + ", at time: " + str(times.now()))
                                         if runtime_find<=15:
                                             result_string = result_string +"    Match end at frame no: " + str(
                                                 last_marked_frame) + ", at time: " + str(times.now())[0:20] + "\n"
@@ -1067,20 +1092,18 @@ while True:             # Event Loop
                                                     runtime_find)
                                                 window["-RES-"].update(result_string)
 
-                                        # for res in result_string:
-                                        #     result_string= result_string+res+"\n"
                                     else:
                                         last_marked_frame = int(countframes - (tolerance * divisible))
-
                                         print("[INFO] Last Match at frame: ", countframes, "/", total_frames)
+
+                                        # adjusting time
                                         end_time_seconds = int(last_marked_frame / fps)
                                         end_time_mins = int(end_time_seconds / 60)
                                         end_time_seconds = int(end_time_seconds % 60)
                                         end_time_hour = int(end_time_mins / 60)
                                         end_time_mins = int(end_time_mins % 60)
-                                        # result_string_list.append(str(runtime_find) + ". Match end at frame no: " + str(
-                                        #     countframes) + ", at time: " + str(end_time_hour) + ":" + str(
-                                        #     end_time_mins) + ":" + str(end_time_seconds))
+
+                                        # showing only first 15 results
                                         if runtime_find<=15:
                                             result_string=result_string + "    Match end at frame no: " + str(
                                                 countframes) + ", at time: " + str(end_time_hour) + ":" + str(
@@ -1093,10 +1116,13 @@ while True:             # Event Loop
                                                     runtime_find)
                                                 window["-RES-"].update(result_string)
 
-                                        # for res in result_string:
-                                        #     result_string= result_string+res+"\n"
 
-
+                                        # appending frames in track_list; so tha later it could be used to extract exact time
+                                        # second thoughts logic can be changed here
+                                        # notes: if it follow the same approach used for live cam i.e. saving direct strings
+                                        #        things would become easy at the end where you read tracked_list and you
+                                        #        dont need to extracting indexes to pull results; complexity will decrease
+                                        #        greatly
                                         tracked_list.append(first_marked_frame)
                                         tracked_list.append(last_marked_frame)
 
@@ -1120,10 +1146,6 @@ while True:             # Event Loop
                                     "Match end at frame no: " + str(countframes) + ", at time: " + str(
                                         times.now())[0:20]+"\n")
                                 print("[INFO] Last Match at frame: ", last_marked_frame, "/", countframes)
-                                print("ceck3")
-                                # updating result run time
-                                # result_string_list.append("    Match end at frame no: " + str(
-                                #     last_marked_frame) + ", at time: " + str(times.now()))
                                 if runtime_find <= 15:
                                     result_string = result_string + "    Match end at frame no: " + str(
                                         last_marked_frame) + ", at time: " + str(times.now())[0:20] + "\n"
@@ -1135,8 +1157,6 @@ while True:             # Event Loop
                                             runtime_find)
                                         window["-RES-"].update(result_string)
 
-                                # for res in result_string:
-                                #     result_string= result_string+res+"\n"
                             else:
                                 last_marked_frame = int(countframes - (tolerance * divisible))
 
@@ -1146,9 +1166,7 @@ while True:             # Event Loop
                                 end_time_seconds = int(end_time_seconds % 60)
                                 end_time_hour = int(end_time_mins / 60)
                                 end_time_mins = int(end_time_mins % 60)
-                                # result_string_list.append(str(runtime_find) + ". Match end at frame no: " + str(
-                                #     countframes) + ", at time: " + str(end_time_hour) + ":" + str(
-                                #     end_time_mins) + ":" + str(end_time_seconds))
+
                                 if runtime_find <= 15:
                                     result_string = result_string + "    Match end at frame no: " + str(
                                         countframes) + ", at time: " + str(end_time_hour) + ":" + str(
@@ -1161,9 +1179,12 @@ while True:             # Event Loop
                                             runtime_find)
                                         window["-RES-"].update(result_string)
 
-                                # for res in result_string:
-                                #     result_string= result_string+res+"\n"
-
+                                # appending frames in track_list; so tha later it could be used to extract exact time
+                                # second thoughts logic can be changed here
+                                # notes: if it follow the same approach used for live cam i.e. saving direct strings
+                                #        things would become easy at the end where you read tracked_list and you
+                                #        dont need to extracting indexes to pull results; complexity will decrease
+                                #        greatly
                                 tracked_list.append(first_marked_frame)
                                 tracked_list.append(last_marked_frame)
 
@@ -1227,13 +1248,7 @@ while True:             # Event Loop
                 out.release()
             cv2.destroyAllWindows()
 
-            # emptying variable, because in integrated they are making bugs, carrying previous values
-            # tracked_list = list()
-            # result_string = ""
-            # first_marked_frame=0
-            # last_marked_frame=0
-            # recognised= False
-            # countframes=0
+# __________________________________________________Break Point End_____________________________________________________________________________________
 
 
 
@@ -1241,18 +1256,10 @@ while True:             # Event Loop
 
 
 
-
-
-
-
-
-
-
-
-
-
-            # break point
+            # extracting current starting time with current tiem to get the total elapsed time
             process_elapsed_time = times.now() - process_start
+
+            # now if tracked_list have some results
             if len(tracked_list) >0:
                 if video_file:
                     print("[INFO] Person found in the video file")
@@ -1369,7 +1376,7 @@ while True:             # Event Loop
                     total_results = 0
                     for results in tracked_list:
                         # total_results += 1
-                        if total_results >= 15:
+                        if total_results >= 30:
                             result_output_2 = "\nOnly showing first 15 results; All results are stored\nin Final_Results_Invidet.txt"
                             result_output_3 = result_output_3+ str(results)
                             print("\n[RESULTS]", person_name, "was found:")

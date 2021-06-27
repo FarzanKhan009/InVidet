@@ -51,7 +51,7 @@ h2= "Akira 25"
 h3= "Akira 10"
 h33= "Akira 15"
 # theme
-sg.theme('technology4')
+sg.theme('dark grey 5')
 
 
 
@@ -122,6 +122,7 @@ def launch_register_window():
               [sg.T("\nEnter 8 digit product key", font=login_had4, pad=login_pad)],
               [sg.Input(size=(32,1),key='-PRDCT-', font=login_had3, pad=login_pad)],
               [sg.Button('Verify', pad=((5, 20), 10), font=login_had4, key="-VERIFY-")],
+              [sg.T("Email", font=login_had3, size=(10, 1)),sg.Input(size=(16, 1), key='-EMAIL-', font=login_had3, pad=login_pad)],
               [sg.T("User Name", font=login_had3, size=(10,1)), sg.Input(size=(16,1),key='-SETUSERNAME-', font=login_had3, pad=login_pad)],
               [sg.T("Password", font=login_had3, size=(10,1)), sg.Input(size=(16,1),key='-SETPASS-', font=login_had3, pad=login_pad)],
               [sg.Button('Register', pad=((5,20),10), font=login_had4, key="-REGOK-")],
@@ -309,6 +310,7 @@ while True:             # Event Loop
         try:
             cam = cv2.VideoCapture(0)
             fps = int(cam.get(5))
+            print("fps:", fps)
             cam.release()
             cv2.destroyAllWindows()
         except:
