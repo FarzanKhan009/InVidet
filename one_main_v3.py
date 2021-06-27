@@ -6,6 +6,11 @@
 #```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 # it is to open text file in windows
 import os
+
+# import time
+
+from playsound import playsound
+
 # it is to open text file in linux
 import subprocess
 # a simple GUI framework
@@ -52,6 +57,8 @@ total_frames = 0
 picture_input, video_input, person_name ="", "", "Anonymous"
 # setting defaults
 threshold, v_fps, fps, frame_count, duration =0.5,1,1,0,0
+alarm = False
+alarm_sound = "Alarm.mp3"
 v_out, v_show, video_file= False, False, True
 # when estimating the time to take by process this ration can be
 # multiplied with video duration when 1 vfps otherwise it change
@@ -67,6 +74,11 @@ tolerance = 5
 
 # Loading model
 encodder = FaceNet()
+
+
+module_path = os.path.dirname(os.path.realpath(__file__))
+
+result_time_string=""
 
 
 #                                                      ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
@@ -445,7 +457,7 @@ while True:
             window["-SVID-"].update("Video SELECTED")
             # obtaining fps and setting text
 
-            vid_url = video_input.rsplit("dett", 1)
+            vid_url = video_input.rsplit(module_path, 1)
             vid_url = vid_url[1][1:]
             # print(vid_url)
             cap = cv2.VideoCapture(vid_url)
@@ -659,6 +671,15 @@ while True:
         window["-APRX-"].update(estimated_time_string)
 
 
+    # setting alarm
+    if event == "-ALARM1-":
+        alarm = False
+        print("[INFO] Alarm is set to False")
+
+    if event == "-ALARM2-":
+        alarm =True
+        print("[INFO] Alarm is set to True")
+
     # setting person name
     if event == "-PRNAME-":
         person_name= window["-PRNAME-"].get()
@@ -672,7 +693,7 @@ while True:
     if event == "-SHOW-":
         # OS dependent for windows use OS library
         # os.system("Final_Results_Invidet.txt")
-        subprocess.call(["xdg-open", "Final_Results_Invidet.txt"])
+        subprocess.call(["xdg-open", "Output/"+person_name+"_final_results_at_"+result_time_string+".txt"])
 
 
 
@@ -765,7 +786,7 @@ while True:
                 # slicing path string because folder reside in project directory
                 pic_url = picture_input.rsplit("InVidett/", 1)
                 pic_url = pic_url[1]
-                picture_name = pic_url.rsplit("/", 1)[1][0:5]
+                picture_name = pic_url.rsplit("/", 1)[1][0:6]
                 output_video_name = person_name + "-" + picture_name
             except:
                 print("[ERRO] Picture was unable to load")
@@ -811,8 +832,8 @@ while True:
             # size = tuple((640,480))
             if video_file:
                 try:
-                    vid_url = video_input.rsplit("InVidett", 1)
-                    video_name = str(vid_url).rsplit("/", 1)[1][0:5]
+                    vid_url = video_input.rsplit(module_path, 1)
+                    video_name = str(vid_url).rsplit("/", 1)[1][0:6]
                     output_video_name = output_video_name + "-" + video_name
                     vid_url = vid_url[1][1:]
                     cap = cv2.VideoCapture(vid_url)
@@ -851,7 +872,7 @@ while True:
                 fourcc = cv2.VideoWriter_fourcc(*'XVID')
                 # if video_file:
                 # size= tuple((width, height))
-                output_video_url = "pic_input/" + output_video_name + ".avi"
+                output_video_url = "Output/OutputVideos/" + output_video_name + ".avi"
                 out = cv2.VideoWriter(output_video_url, fourcc, v_fps, (width, height))  # (640, 480))
                 print("[INFO] Output video path is set to:",output_video_url)
 
@@ -956,6 +977,13 @@ while True:
                         # if in threshold range
                         else:
                             recognised = True
+                            if alarm:
+                                # time.sleep(1)
+                                print("\a")
+                                playsound('/home/farzanbarakzai09/PycharmProjects/InVidett/Alarm.wav')
+                                # os.system(alarm_sound)
+                                # subprocess.call(["xdg-open", alarm_sound])
+                                # process = subprocess.call(["afplay", alarm_sound])
                             if not video_file:
                                 print("[INFO] Match is True for face", face_num, "/", len(faces), "with the distance", str(distance)[0:3], " in the frame",
                                       countframes, "/", countframes)
@@ -1302,7 +1330,7 @@ while True:
                             end_time_string = str(end_time_hour) + ":" + str(end_time_mins) + ":" + str(end_time_seconds)
 
                             if total_results >= 15:
-                                result_output_2= "\nOnly showing first 15 results; All results are stored\nin Final_Results_Invidet.txt"
+                                result_output_2= "\nOnly showing first 15 results; All results are stored\nin output rectot"
                                 result_output_3 = result_output_3 + str(find) + ". " + person_name + " was found approximately during \n    " + start_time_string + " to " + end_time_string + ".\n"
                                 print("\n[RESULTS]", person_name, "was found:")
                                 print("[RESULTS] in frames, from frame number ", frames, " to ", last_frame)
@@ -1354,7 +1382,8 @@ while True:
                         print("[RESULTS] That is approximately Face Matched during time \n[RESULTS]", start_time_string, "sec to ", end_time_string)
                     window.refresh()
                     window["-RES-"].update(result_output_0+result_output_1+result_output_2)
-                    result_text_file= open("Final_Results_Invidet.txt", "w")
+                    result_time_string= str(times.now()).rsplit(" ")[1][0:10]
+                    result_text_file= open("Output/"+person_name+"_final_results_at_"+result_time_string+".txt", "w")
                     result_text_file.truncate(0)
                     result_text_file.write(result_output_0+result_output_1+result_output_3)
                     result_text_file.close()
@@ -1377,7 +1406,7 @@ while True:
                     for results in tracked_list:
                         # total_results += 1
                         if total_results >= 30:
-                            result_output_2 = "\nOnly showing first 15 results; All results are stored\nin Final_Results_Invidet.txt"
+                            result_output_2 = "\nOnly showing first 15 results; All results are stored\nin Outputs directory"
                             result_output_3 = result_output_3+ str(results)
                             print("\n[RESULTS]", person_name, "was found:")
                             print("[RESULTS]", result_output_1, result_output_3)
@@ -1391,7 +1420,7 @@ while True:
 
                     window.refresh()
                     window["-RES-"].update(result_output_0 + result_output_1 + result_output_2)
-                    result_text_file = open("Final_Results_Invidet.txt", "w")
+                    result_text_file = open("Output/"+person_name+"_final_results_at_"+result_time_string+".txt", "w")
                     result_text_file.truncate(0)
                     result_text_file.write(result_output_0 + result_output_1 + result_output_3)
                     result_text_file.close()
