@@ -3,6 +3,8 @@ import smtplib
 import ssl
 import random
 
+from credentials import get_email, get_password
+
 import PySimpleGUI as sg
 
 # getting screen size
@@ -241,6 +243,8 @@ while True:
 
     # handling when exit button clicked or closing window
     if event == sg.WIN_CLOSED or event in ["-LOGEXIT-" ,"-REGEXIT-", "-MAINEXIT-"]:
+
+        # print("email:", get_email(), "password:", get_password())
 
         if window == register_window:
             window.close()

@@ -136,3 +136,9 @@ dmypy.json
 *.jpg
 *.avi
 *.jpeg
+*.mp3
+*.wav
+
+# credentials
+credentials.py
+
