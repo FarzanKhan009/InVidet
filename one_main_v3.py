@@ -5,6 +5,7 @@
 #                                                        ▀(@)▀▀▀▀▀▀▀(@)(@)▀▀▀▀▀▀▀▀▀▀▀▀(​@)▀▘ ::
 #```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 # it is to open text file in windows
+import json
 import os
 
 # import time
@@ -34,6 +35,9 @@ from scipy.spatial.distance import cosine
 # to read the monitors an obtain screen sizes
 from screeninfo import get_monitors
 
+import smtplib
+import ssl
+import random
 
 
 
@@ -89,7 +93,7 @@ result_time_string=""
 #```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 
 
-# to use in padding tupple
+# to use in padding tuple
 general_size= (int(width/90), 1)
 output_height=int(height/18)
 output_width=int(width/3)
@@ -102,13 +106,20 @@ login_had1= "Akira 30"
 login_had2= "Akira 25"
 login_had3= "Akira 20"
 login_had4= "Akira 14"
+popups_font= "Akira 14"
 h1= "Akira 30"
 h2= "Akira 25"
 h3= "Akira 10"
 h33= "Akira 15"
+
+
 # theme
 sg.theme('dark grey 5')
 
+#________________________________________________________________
+# product keys
+available_product_keys= ["1FARZAN9", "2FAHAD99", "3FAROOQ9"]
+#________________________________________________________________
 
 
 
@@ -126,6 +137,36 @@ def get_embedding(face):
     # face = expand_dims(face, axis=0)
     embeddings = encodder.embeddings(np.array(face))
     return embeddings
+
+
+def info_encoder(pss):
+    evalue = []
+    for char in pss:
+        evalue.append(ord(char))
+    return evalue
+
+
+def info_decoder(evalue):
+    pss = ''
+    for val in evalue:
+        pss = pss + chr(val)
+    return str(pss)
+
+
+def send_otp(otp, email):
+    try:
+        port = 465
+        sender_email = 'email@gmail.com'
+        sender_email_pass = 'password'
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL('smtp.gmail.com', port, context=context) as server:
+            server.login(sender_email, sender_email_pass)
+            message = ('Your OTP is {}').format(otp)
+            server.sendmail(sender_email, email, message)
+        return
+    except Exception as err:
+        sg.Popup(err)
+        return
 
 
 
@@ -146,8 +187,8 @@ def launch_login_window():
     # layout =
     layout=[
          [sg.Text('Login', font=login_had1, pad=((5,5),(200,20)))],
-         [sg.Text('User Name: ', font=login_had3, pad=login_pad, size=(16, 1)), sg.In(font=login_had3, size=(16,1))],
-         [sg.Text('Password: ', font=login_had3, size=(16, 1), pad=login_pad), sg.In(password_char="*", size= (16,1), font=login_had3)],
+         [sg.Text('User Name: ', font=login_had3, pad=login_pad, size=(16, 1)), sg.In(font=login_had3, size=(16,1), key="-LGUSER-")],
+         [sg.Text('Password: ', font=login_had3, size=(16, 1), pad=login_pad), sg.In(password_char="*", size= (16,1), font=login_had3, key="-LGPASS-")],
          [sg.Button('Login', key="-LOGINBTN-", pad=login_pad, font=login_had4), sg.Button('Forget Password', key="-FORGET-", pad=login_pad, font=login_had4)],
          [sg.T("\n\n\n\nNot Registered?", font=h2, pad=login_pad)],
          [sg.Button("Register Now", key='-REGBTN-', font=login_had4, pad=login_pad), sg.Button('Exit', key="-LOGEXIT-", font=login_had4)]
@@ -159,12 +200,13 @@ def launch_login_window():
 def launch_register_window():
     layout = [[sg.Text('Registration', font=login_had1, pad=((5,5), (200,20)))],
               [sg.T("\nEnter 8 digit product key", font=login_had4, pad=login_pad)],
-              [sg.Input(size=(32,1),key='-PRDCT-', font=login_had3, pad=login_pad)],
-              [sg.Button('Verify', pad=((5, 20), 10), font=login_had4, key="-VERIFY-")],
-              [sg.T("Email", font=login_had3, size=(10, 1)),sg.Input(size=(16, 1), key='-EMAIL-', font=login_had3, pad=login_pad)],
-              [sg.T("User Name", font=login_had3, size=(10,1)), sg.Input(size=(16,1),key='-SETUSERNAME-', font=login_had3, pad=login_pad)],
-              [sg.T("Password", font=login_had3, size=(10,1)), sg.Input(size=(16,1),key='-SETPASS-', font=login_had3, pad=login_pad)],
-              [sg.Button('Register', pad=((5,20),10), font=login_had4, key="-REGOK-")],
+              [sg.Input(size=(35,1),key='-PRDCT-', font=login_had3, pad=login_pad, enable_events=True)],
+              [sg.Button('Verify', pad=((5, 20), 10), font=login_had4, key="-VERIFY-", disabled= True)],
+              [sg.T("Email", font=login_had3, size=(18, 1)),sg.Input(size=(16, 1), key='-EMAIL-', font=login_had3, pad=login_pad, disabled= True)],
+              [sg.T("User Name", font=login_had3, size=(18,1)), sg.Input(size=(16,1),key='-SETUSERNAME-', font=login_had3, pad=login_pad, disabled= True)],
+              [sg.T("Password", font=login_had3, size=(18,1)), sg.Input(size=(16,1),key='-SETPASS-', font=login_had3, pad=login_pad, password_char="*", disabled= True)],
+			  [sg.T("Re-Enter Password", font=login_had3, size=(18, 1)), sg.Input(size=(16, 1), key='-SETPASS1-', font=login_had3, pad=login_pad, password_char="*", disabled= True)],
+			  [sg.Button('Register', pad=((5,20),10), font=login_had4, key="-REGOK-", disabled= True)],
               [sg.Button('Login Now', key="-BKLOGIN-", font=login_had4, pad=login_pad), sg.Button('Exit', key="-REGEXIT-", font=login_had4, pad=login_pad)]]
     in_col=[[sg.Col(layout, element_justification="l", vertical_alignment="c")]]
     return sg.Window('Register - InViDet', in_col,location=(0,0), element_justification="c", size=screensize, finalize=True)
@@ -318,6 +360,60 @@ while True:
 
     # taking control to main window, if successfully login
     if event == "-LOGINBTN-" and not register_window and not main_window:
+        # reg_email = values["-EMAIL-"]
+        login_user_name = values["-LGUSER-"]
+        login_password = values["-LGPASS-"]
+        # reg_repassword = values["-SETPASS1-"]
+
+        # check on all required fields must be filled
+        if not login_user_name or not login_password:
+            sg.popup_error("Missing Fields!", font=popups_font)
+            continue
+
+        # check on usernames and passwords must not contain spaces
+        if (" " in login_user_name):
+            sg.popup_error("User Name can't contain spaces!", font=popups_font)
+            continue
+        if (" " in login_password):
+            sg.popup_error("Password can't contain spaces!", font=popups_font)
+            continue
+
+        # check on password length (pass: 8-15)
+        if len(login_user_name) < 5 or len(login_user_name) > 10:
+            sg.popup_error("Password must be 5 to 10 characters long", font=popups_font)
+            continue
+
+        # check on password length (pass: 8-15)
+        if len(login_password) < 8 or len(login_password) > 15:
+            sg.popup_error("Password must be 8 to 15 characters long", font=popups_font)
+            continue
+
+        # some sort of information encryption (manipulation with the asci values)
+        # encrypted_reg_email = info_encoder(reg_email)
+        # encrypted_reg_user_name = info_encoder(reg_user_name)
+        # encrypted_reg_password = info_encoder(reg_password)
+
+        with open('invidet_data.py', 'r') as read_data:
+            user_data_dictionary = json.load(read_data)
+            decrypted_username = info_decoder(user_data_dictionary["username"])
+            decrypted_password = info_decoder(user_data_dictionary["password"])
+
+        if login_user_name != decrypted_username:
+            sg.popup("User is not registered!", font=popups_font)
+            continue
+        if login_password != decrypted_password:
+            sg.popup("Wrong Password!", font=popups_font)
+            continue
+
+        # # finally writing information in file to use later
+        # user_data_dictionary = {"email": encrypted_reg_email, "username": encrypted_reg_user_name,
+        #                         "password": encrypted_reg_password}
+        # dic.update({'sqs': False})
+        with open('invidet_data.py', 'w') as write:
+            json.dump(user_data_dictionary, write)
+
+        sg.popup("Successfully Logged-in!")
+
         main_window = launch_main_window()
         login_window.close()
         login_window = None
@@ -325,8 +421,32 @@ while True:
 
     # handling popup event if clicked forget password
     if event == "-FORGET-":
-        email = sg.popup_get_text('Enter your email address', 'Forget Password', size=(20,3), font=login_had4)
-        sg.popup('Password Recovery', 'Instructions to recover are sent to', email)
+
+        entered_email = sg.popup_get_text('Enter your email address', 'Forget Password', size=(20, 3),
+                                          font=popups_font)
+        with open("invidet_data.py", "r") as read_data:
+            user_data_dictionary = json.load(read_data)
+        decrypted_email = info_decoder(user_data_dictionary["email"])
+
+        entered_email = entered_email.lower()
+        if entered_email != decrypted_email:
+            sg.popup_error("Your entered email is not in registered record")
+            continue
+
+        generated_otp = random.randint(111111, 999999)
+        print("otp: ", generated_otp)
+        # send_otp(generated_otp, entered_email)
+
+        entered_otp = sg.popup_get_text('Enter OTP', 'Forget Password', size=(20, 3), font=popups_font)
+
+        if str(generated_otp) != str(entered_otp):
+            sg.popup_error("OTP is wrong! exiting")
+            continue
+
+        sg.popup('Remember Credentials!', 'User Name: ' + str(info_decoder(user_data_dictionary["username"])),
+                 "Password: " + str(info_decoder(user_data_dictionary["password"])), font=popups_font)
+
+
 
     # taking control to Registration screen, when clicked register now
     if event == '-REGBTN-' and not register_window and not main_window:
@@ -335,12 +455,110 @@ while True:
         login_window = None
         main_window = None
 
+
+    # taking control back to login window, if successfully registered
+    if event == "-REGOK-":
+        reg_email = values["-EMAIL-"]
+        reg_user_name = values["-SETUSERNAME-"]
+        reg_password = values["-SETPASS-"]
+        reg_repassword = values["-SETPASS1-"]
+
+        # check on all required fields must be filled
+        if not reg_email or not reg_user_name or not reg_password or not reg_repassword:
+            sg.popup_error("Missing Fields!", font=popups_font)
+            continue
+
+        # check on email and usernames and passwords must not contain spaces
+        if (" " in reg_email):
+            sg.popup_error("Email can't contain spaces!", font=popups_font)
+            continue
+        if (" " in reg_user_name):
+            sg.popup_error("User Name can't contain spaces!", font=popups_font)
+            continue
+        if (" " in reg_password or " " in reg_repassword):
+            sg.popup_error("Password can't contain spaces!", font=popups_font)
+            continue
+
+        # check on email validity
+        if not reg_email.endswith("@gmail.com"):
+            sg.popup_error("Email is not valid", font=popups_font)
+            continue
+
+        # check on username length (validity 5-10)
+        if len(reg_user_name) < 5 or len(reg_user_name) > 10:
+            sg.popup_error("user name must be 5 to 10 characters long", font=popups_font)
+            continue
+
+        # check on password length (validity 8-15)
+        if len(reg_password) < 8 or len(reg_password) > 15 or len(reg_repassword) < 8 or len(reg_repassword) > 15:
+            sg.popup_error("Password must be 8 to 15 characters long", font=popups_font)
+            continue
+
+        # check on password match
+        if not reg_password == reg_repassword:
+            sg.popup_error("Password doesn't match!", font=popups_font)
+            continue
+
+        # some sort of information encryption (manipulation with the asci values)
+        encrypted_reg_email = info_encoder(reg_email)
+        encrypted_reg_user_name = info_encoder(reg_user_name)
+        encrypted_reg_password = info_encoder(reg_password)
+
+        # finally writing information in file to use later
+        user_data_dictionary = {"email": encrypted_reg_email, "username": encrypted_reg_user_name,
+                                "password": encrypted_reg_password}
+        # dic.update({'sqs': False})
+        with open('invidet_data.py', 'w') as write:
+            json.dump(user_data_dictionary, write)
+
+        sg.popup("Successfully Registered!", font=popups_font)
+
+        # making these fields disabled again so not everyone can register himself
+        window["-REGOK-"].update(disabled=True)
+        window["-EMAIL-"].update(disabled=True)
+        window["-SETUSERNAME-"].update(disabled=True)
+        window["-SETPASS-"].update(disabled=True)
+        window["-SETPASS1-"].update(disabled=True)
+
+        # closing and launching new windows
+        login_window = launch_login_window()
+        register_window.close()
+        register_window = None
+        main_window = None
+
     # taking back to login screen, clicked login now, from register screen
     if event == "-BKLOGIN-" and not login_window and not main_window:
         login_window = launch_login_window()
         register_window.close()
         register_window = None
         main_window = None
+
+    # handling verification with available product keys
+    if event == "-VERIFY-":
+        # obtaining product key from user
+        product_key= values["-PRDCT-"]
+
+        # matching the key if available
+        if product_key in available_product_keys:
+            window["-REGOK-"].update(disabled= False)
+            window["-EMAIL-"].update(disabled= False)
+            window["-SETUSERNAME-"].update(disabled= False)
+            window["-SETPASS-"].update(disabled= False)
+            window["-SETPASS1-"].update(disabled= False)
+            sg.popup("Successfully Verified!\nNow you can create account", font= popups_font)
+
+        else:
+            sg.popup_error("Product key is not valid", font= popups_font)
+            continue
+
+    # handling to force 8 characters key
+    if event == "-PRDCT-":
+        product_key = values["-PRDCT-"]
+        if len(product_key) == 8:
+            window["-VERIFY-"].update(disabled=False)
+        else:
+            window["-VERIFY-"].update(disabled=True)
+
 
     # taking control back to login window, if successfully registered
     if event == "-REGOK-":
