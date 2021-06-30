@@ -38,6 +38,7 @@ from screeninfo import get_monitors
 import smtplib
 import ssl
 import random
+from credentials import get_email, get_password
 
 
 
@@ -156,12 +157,13 @@ def info_decoder(evalue):
 def send_otp(otp, email):
     try:
         port = 465
-        sender_email = 'email@gmail.com'
-        sender_email_pass = 'password'
+        sender_email = get_email()
+        sender_email_pass = get_password()
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL('smtp.gmail.com', port, context=context) as server:
             server.login(sender_email, sender_email_pass)
             message = ('Your OTP is {}').format(otp)
+            message = 'Subject: {}\n\n{}'.format("OTP", message)
             server.sendmail(sender_email, email, message)
         return
     except Exception as err:
@@ -367,25 +369,25 @@ while True:
 
         # check on all required fields must be filled
         if not login_user_name or not login_password:
-            sg.popup_error("Missing Fields!", font=popups_font)
+            sg.popup_error("Missing Fields!", font=popups_font, title="Error")
             continue
 
         # check on usernames and passwords must not contain spaces
         if (" " in login_user_name):
-            sg.popup_error("User Name can't contain spaces!", font=popups_font)
+            sg.popup_error("User Name can't contain spaces!", font=popups_font, title="Error")
             continue
         if (" " in login_password):
-            sg.popup_error("Password can't contain spaces!", font=popups_font)
+            sg.popup_error("Password can't contain spaces!", font=popups_font, title="Error")
             continue
 
         # check on password length (pass: 8-15)
         if len(login_user_name) < 5 or len(login_user_name) > 10:
-            sg.popup_error("Password must be 5 to 10 characters long", font=popups_font)
+            sg.popup_error("Password must be 5 to 10 characters long", font=popups_font, title="Error")
             continue
 
         # check on password length (pass: 8-15)
         if len(login_password) < 8 or len(login_password) > 15:
-            sg.popup_error("Password must be 8 to 15 characters long", font=popups_font)
+            sg.popup_error("Password must be 8 to 15 characters long", font=popups_font, title="Error")
             continue
 
         # some sort of information encryption (manipulation with the asci values)
@@ -399,10 +401,10 @@ while True:
             decrypted_password = info_decoder(user_data_dictionary["password"])
 
         if login_user_name != decrypted_username:
-            sg.popup("User is not registered!", font=popups_font)
+            sg.popup("User is not registered!", font=popups_font, title="Error")
             continue
         if login_password != decrypted_password:
-            sg.popup("Wrong Password!", font=popups_font)
+            sg.popup("Wrong Password!", font=popups_font, title="Error")
             continue
 
         # # finally writing information in file to use later
@@ -412,7 +414,7 @@ while True:
         with open('invidet_data.py', 'w') as write:
             json.dump(user_data_dictionary, write)
 
-        sg.popup("Successfully Logged-in!")
+        sg.popup("Successfully Logged-in!", non_blocking= True, auto_close_duration= 5, auto_close= True, keep_on_top=True, title="Success")
 
         main_window = launch_main_window()
         login_window.close()
@@ -423,28 +425,32 @@ while True:
     if event == "-FORGET-":
 
         entered_email = sg.popup_get_text('Enter your email address', 'Forget Password', size=(20, 3),
-                                          font=popups_font)
+                                          font=popups_font, title="Error")
+        # bugfix screen hang when it enter nothing
+        if not entered_email:
+            continue
+
         with open("invidet_data.py", "r") as read_data:
             user_data_dictionary = json.load(read_data)
         decrypted_email = info_decoder(user_data_dictionary["email"])
 
         entered_email = entered_email.lower()
         if entered_email != decrypted_email:
-            sg.popup_error("Your entered email is not in registered record")
+            sg.popup_error("Your entered email is not in registered record", title="Error")
             continue
 
         generated_otp = random.randint(111111, 999999)
         print("otp: ", generated_otp)
-        # send_otp(generated_otp, entered_email)
-
-        entered_otp = sg.popup_get_text('Enter OTP', 'Forget Password', size=(20, 3), font=popups_font)
+        sg.popup_timed("Check your mail, and fetch OTP: "+ str(entered_email), auto_close_duration=5, keep_on_top= True, title="Fetech OTP")
+        send_otp(generated_otp, entered_email)
+        entered_otp = sg.popup_get_text('Enter OTP', 'Forget Password', size=(20, 3), font=popups_font, keep_on_top= True)
 
         if str(generated_otp) != str(entered_otp):
-            sg.popup_error("OTP is wrong! exiting")
+            sg.popup_error("OTP is wrong! exiting", title="Error")
             continue
 
         sg.popup('Remember Credentials!', 'User Name: ' + str(info_decoder(user_data_dictionary["username"])),
-                 "Password: " + str(info_decoder(user_data_dictionary["password"])), font=popups_font)
+                 "Password: " + str(info_decoder(user_data_dictionary["password"])), font=popups_font, keep_on_top= True, title="User Details")
 
 
 
@@ -465,38 +471,38 @@ while True:
 
         # check on all required fields must be filled
         if not reg_email or not reg_user_name or not reg_password or not reg_repassword:
-            sg.popup_error("Missing Fields!", font=popups_font)
+            sg.popup_error("Missing Fields!", font=popups_font, title="Error")
             continue
 
         # check on email and usernames and passwords must not contain spaces
         if (" " in reg_email):
-            sg.popup_error("Email can't contain spaces!", font=popups_font)
+            sg.popup_error("Email can't contain spaces!", font=popups_font, title="Error")
             continue
         if (" " in reg_user_name):
-            sg.popup_error("User Name can't contain spaces!", font=popups_font)
+            sg.popup_error("User Name can't contain spaces!", font=popups_font, title="Error")
             continue
         if (" " in reg_password or " " in reg_repassword):
-            sg.popup_error("Password can't contain spaces!", font=popups_font)
+            sg.popup_error("Password can't contain spaces!", font=popups_font, title="Error")
             continue
 
         # check on email validity
         if not reg_email.endswith("@gmail.com"):
-            sg.popup_error("Email is not valid", font=popups_font)
+            sg.popup_error("Email is not valid", font=popups_font, title="Error")
             continue
 
         # check on username length (validity 5-10)
         if len(reg_user_name) < 5 or len(reg_user_name) > 10:
-            sg.popup_error("user name must be 5 to 10 characters long", font=popups_font)
+            sg.popup_error("user name must be 5 to 10 characters long", font=popups_font, title="Error")
             continue
 
         # check on password length (validity 8-15)
         if len(reg_password) < 8 or len(reg_password) > 15 or len(reg_repassword) < 8 or len(reg_repassword) > 15:
-            sg.popup_error("Password must be 8 to 15 characters long", font=popups_font)
+            sg.popup_error("Password must be 8 to 15 characters long", font=popups_font, title="Error")
             continue
 
         # check on password match
         if not reg_password == reg_repassword:
-            sg.popup_error("Password doesn't match!", font=popups_font)
+            sg.popup_error("Password doesn't match!", font=popups_font, title="Error")
             continue
 
         # some sort of information encryption (manipulation with the asci values)
@@ -545,10 +551,10 @@ while True:
             window["-SETUSERNAME-"].update(disabled= False)
             window["-SETPASS-"].update(disabled= False)
             window["-SETPASS1-"].update(disabled= False)
-            sg.popup("Successfully Verified!\nNow you can create account", font= popups_font)
+            sg.popup("Successfully Verified!\nNow you can create account", font= popups_font, title="Verified", auto_close= True, auto_close_duration= 3)
 
         else:
-            sg.popup_error("Product key is not valid", font= popups_font)
+            sg.popup_error("Product key is not valid", font= popups_font, title="Error")
             continue
 
     # handling to force 8 characters key
